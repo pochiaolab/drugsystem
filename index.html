@@ -178,12 +178,13 @@
                             <label>規格</label>
                             <input type="text" id="editSpec" class="form-control">
                         </div>
+                        <!-- 🌟 將這兩個標籤旁邊的 <small> 提示文字拿掉了 -->
                         <div class="col-md-6">
-                            <label>廠商 <small style="color:#94a3b8; font-weight:normal;">(名單對應「廠商」分頁)</small></label>
+                            <label>廠商</label>
                             <select id="editVendor" class="form-select"></select>
                         </div>
                         <div class="col-md-6">
-                            <label>位置 <small style="color:#94a3b8; font-weight:normal;">(根據目前藥櫃動態顯示)</small></label>
+                            <label>位置</label>
                             <select id="editLocation" class="form-select" onchange="handleLocationChange(this)"></select>
                         </div>
                         <div class="col-md-4">
@@ -319,7 +320,6 @@
             }).join('');
         }
 
-        // 🌟 自訂新增位置邏輯
         function handleLocationChange(selectElem) {
             if(selectElem.value === 'ADD_NEW') {
                 let name = prompt("請輸入新的位置名稱：\n(儲存藥品後，此位置將自動加入該藥櫃的清單中)");
@@ -358,12 +358,10 @@
             
             let vVal = String(venVal).trim(); let lVal = String(locVal).trim();
             
-            // 🌟 廠商：直接使用讀取自廠商分頁的 vendorList
             venSelect.innerHTML = '<option value="">- 未標示 -</option>' + vendorList.map(v => `<option value="${v}">${v}</option>`).join('');
             if(vVal && !vendorList.includes(vVal)) { let opt = document.createElement('option'); opt.value = vVal; opt.text = vVal; venSelect.add(opt, venSelect.options[1]); }
             venSelect.value = vVal;
 
-            // 🌟 位置：依照目前藥櫃(sheetName)動態載入專屬位置
             let sheetLocs = locationsMap[sheetName] || [];
             locSelect.innerHTML = '<option value="">- 未標示 -</option>' + sheetLocs.map(l => `<option value="${l}">${l}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新位置...</option>`;
             if(lVal && !sheetLocs.includes(lVal)) { let opt = document.createElement('option'); opt.value = lVal; opt.text = lVal; locSelect.add(opt, locSelect.options[1]); }
@@ -376,7 +374,6 @@
             editModalInstance.show();
         }
 
-        // 🌟 100% 絕對精準防護的儲存邏輯
         function saveEditData() {
             if (!currentEditRow) return;
             const btn = document.getElementById('saveEditBtn'); btn.disabled = true; btn.innerText = "儲存中...";
@@ -384,7 +381,6 @@
             let updateData = {};
             const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
             
-            // 幫助我們找到試算表裡「最準確」的欄位名稱 (避免 CAS編號 跟 編號 搞混)
             const exactKey = (possibleNames) => {
                 return Object.keys(currentEditRow).find(k => possibleNames.includes(k.replace(/\s+/g, '')));
             };
@@ -399,7 +395,6 @@
             let kStatus = exactKey(['使用狀態', '狀態']); if(kStatus) updateData[kStatus] = getVal('editStatus');
             let kGhs = exactKey(['GHS', 'GHS標籤']); if(kGhs) updateData[kGhs] = getVal('editGhs') === 'true' ? '是' : '否';
 
-            // 只有當「修改後的值」真的跟「原本儲存格的值」不一樣時，才上傳更新
             let finalUpdateData = {};
             for(let key in updateData) {
                 if(updateData[key].trim() !== String(currentEditRow[key] || '').trim()) {
