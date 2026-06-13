@@ -10,10 +10,7 @@
         .main-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 0 10px; padding-bottom: 40px; }
         .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); padding: 15px 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .top-header-card { display: flex; justify-content: center; padding: 20px 15px; }
-        
-        /* 🌟 修改：將 max-width 從 1150px 放大到 1400px，讓搜尋框變得更長更寬 */
         .header-content-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 1400px; } 
-        
         .top-logo { height: 145px; width: auto; object-fit: contain; flex-shrink: 0; margin-right: -45px; z-index: 2; position: relative; } 
         .top-search-area { flex-grow: 1; width: 100%; z-index: 1; position: relative; padding-left: 45px; }
         .top-search-title { font-weight: 800; color: #1e293b; font-size: 1.6rem; text-align: center; margin-bottom: 12px; padding-right: 45px; } 
@@ -152,9 +149,6 @@
                 </table>
             </div>
         </div>
-
-        <!-- 新增藥品專屬區塊 (隱藏作為後備) -->
-        <div class="glass-card mt-4" id="addChemicalSection" style="display: none; padding: 25px 30px;"></div>
     </div>
 
     <!-- 將新增藥品改成 Modal 彈出視窗 -->
@@ -312,6 +306,12 @@
         const opts = ['100%','90%','80%','70%','60%','50%','40%','30%','20%','10%','0%'];
         const LOCAL_STORAGE_KEY = 'LPC_LAB_DATA_V7';
 
+        // 🌟 懶加載 (Infinite Scroll) 參數
+        let currentDisplayData = [];
+        let currentRenderCount = 0;
+        const RENDER_CHUNK = 50;
+        let isRendering = false;
+
         function sortChemicalData(data) {
             return data.map((item, index) => { item._originalIndex = index; return item; })
                        .sort((a, b) => {
@@ -384,12 +384,26 @@
             document.getElementById('tableWrapper').style.display = 'block'; document.getElementById('memoSection').style.display = 'block';
             
             const searchInput = document.getElementById('searchInput'); searchInput.disabled = false; 
-            // 🌟 變更 placeholder，拿掉「智慧」兩個字
             searchInput.placeholder = `🔍 搜尋 ${chemicalData.length} 筆資料...`;
             document.getElementById('openAddBtn').disabled = false;
 
             renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); displayData(chemicalData);
         }
+
+        // 🌟 懶加載核心邏輯：滑動到底部時載入更多
+        window.addEventListener('scroll', () => {
+            if (isRendering) return;
+            // 當滑動到距離底部 800px 時觸發載入
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 800) {
+                isRendering = true;
+                if (currentRenderCount < currentDisplayData.length) {
+                    const nextChunk = currentDisplayData.slice(currentRenderCount, currentRenderCount + RENDER_CHUNK);
+                    currentRenderCount += nextChunk.length;
+                    document.getElementById('tableBody').insertAdjacentHTML('beforeend', generateRowsHtml(nextChunk));
+                }
+                setTimeout(() => { isRendering = false; }, 100);
+            }
+        });
 
         function openAddModal() {
             document.getElementById('addName').value = '';
@@ -418,7 +432,6 @@
                 chemicalData = sortChemicalData(response.data || []); 
                 buyerList = response.buyers || []; memoList = response.memos || []; locationsMap = response.locationsMap || {}; vendorList = response.vendors || []; saveToLocal(); 
                 btn.classList.remove('spinning'); searchInput.disabled = false; 
-                // 🌟 重新整理後，placeholder 也是簡潔版
                 searchInput.placeholder = `🔍 搜尋 ${chemicalData.length} 筆資料...`;
                 renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); document.getElementById('searchInput').dispatchEvent(new Event('input'));
             }).catch(err => { btn.classList.remove('spinning'); searchInput.disabled = false; alert("更新失敗，請檢查網路。"); });
@@ -513,7 +526,6 @@
             }).catch(e => { btn.disabled = false; btn.innerText = "確認新增"; alert("連線異常！"); });
         }
 
-
         function formatStatus(s) { s = String(s || '').trim(); if (s === '1' || s === '1.0') return '100%'; if (s === '0') return '0%'; if (/^0\.[1-9]$/.test(s)) return (parseFloat(s)*100)+'%'; return s; }
 
         function getBuyerSelectHtml(r) {
@@ -532,9 +544,9 @@
             return `<div style="display:flex;gap:2px;justify-content:center;"><select class="date-select ${prefix}-m-${r['_rowIndex']}" onchange="syncDateSelect('${r['來源分頁']}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${mOpts}</select><select class="date-select ${prefix}-d-${r['_rowIndex']}" onchange="syncDateSelect('${r['來源分頁']}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${dOpts}</select></div>`;
         }
 
-        function displayData(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = data.map(r => {
+        // 🌟 核心：改成懶加載專用的生成函數
+        function generateRowsHtml(dataChunk) {
+            return dataChunk.map(r => {
                 const s = formatStatus(r['使用狀態']); let loc = []; for(let k in r) if(k.includes('位置') && r[k]) loc.push(String(r[k]).trim());
                 let ghsVal = String(r['GHS'] || '').toLowerCase().trim(); let ghsBadge = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? '<span class="badge-soft badge-ghs-yes">有標籤</span>' : '<span class="badge-soft badge-ghs-no">無標籤</span>';
                 let colorClass = ['10%','20%','0%'].includes(s) ? 'status-danger' : (s === '30%' ? 'status-warning' : (s === '40%' ? 'status-caution' : 'status-normal'));
@@ -546,6 +558,13 @@
 
                 return `<tr><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="藥品名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="濃度">${r['濃度']||'-'}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格/廠商" class="spec-cell"><div class="spec-vendor-container"><span class="spec-item">${r['規格']||'-'}</span><span class="vendor-item">${r['廠商']||'-'}</span></div></td><td data-label="位置"><span class="badge-soft badge-location">${r['位置']||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="使用狀態">${selectHtml}</td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購">${orderHtml}</td><td data-label="GHS">${ghsBadge}</td><td data-label="操作" style="white-space:nowrap;">${actionHtml}</td></tr>`;
             }).join('');
+        }
+
+        // 🌟 初始化顯示：只畫出前 50 筆，其餘的靠滑動載入
+        function displayData(data) {
+            currentDisplayData = data;
+            currentRenderCount = Math.min(RENDER_CHUNK, data.length);
+            document.getElementById('tableBody').innerHTML = generateRowsHtml(currentDisplayData.slice(0, currentRenderCount));
         }
 
         function handleLocationChange(selectElem) {
