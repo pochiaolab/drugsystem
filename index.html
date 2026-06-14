@@ -64,12 +64,26 @@
         .modal-body label, .add-form-label { font-weight: 600; color: #475569; font-size: 0.9rem; margin-bottom: 4px; }
         .modal-body .form-control, .modal-body .form-select, .add-form-input { border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; }
 
+        /* 📱 手機版排版完美修復 */
         @media (max-width: 768px) {
             .top-header-card { padding: 15px 10px; }
             .header-content-wrapper { flex-direction: row; align-items: center; justify-content: flex-start; } 
             .top-logo { height: 85px; margin-right: -25px; } 
             .top-search-area { padding-left: 25px; } 
             .top-search-title { font-size: 1.3rem; text-align: left; padding-right: 0; margin-bottom: 8px; } 
+            
+            /* 🌟 將手機版搜尋列與新增按鈕改為上下排列，更好點擊 */
+            .top-search-area .d-flex { flex-direction: column; gap: 8px !important; }
+            #openAddBtn { width: 100%; padding: 10px; }
+
+            /* 🌟 修復備忘錄區塊破版問題 */
+            .memo-input-group { flex-direction: column; gap: 8px; }
+            .memo-input, .memo-author-select, .memo-btn { width: 100%; margin: 0; }
+            .memo-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .memo-text { margin-right: 0; width: 100%; word-break: break-word; }
+            .memo-meta { width: 100%; justify-content: space-between; }
+
+            /* 表格手機版顯示優化 */
             .mobile-card-table thead { display: none !important; } 
             .mobile-card-table, .mobile-card-table tbody, .mobile-card-table tr, .mobile-card-table td { display: block; width: 100%; } 
             .mobile-card-table tr { margin-bottom: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 15px; border: 1px solid #edf2f7; position: relative; } 
@@ -151,7 +165,6 @@
         </div>
     </div>
 
-    <!-- 將新增藥品改成 Modal 彈出視窗 -->
     <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
@@ -223,7 +236,6 @@
         </div>
     </div>
 
-    <!-- 編輯藥品資料的 Modal 視窗 -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
@@ -306,7 +318,6 @@
         const opts = ['100%','90%','80%','70%','60%','50%','40%','30%','20%','10%','0%'];
         const LOCAL_STORAGE_KEY = 'LPC_LAB_DATA_V7';
 
-        // 🌟 懶加載 (Infinite Scroll) 參數
         let currentDisplayData = [];
         let currentRenderCount = 0;
         const RENDER_CHUNK = 50;
@@ -390,10 +401,8 @@
             renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); displayData(chemicalData);
         }
 
-        // 🌟 懶加載核心邏輯：滑動到底部時載入更多
         window.addEventListener('scroll', () => {
             if (isRendering) return;
-            // 當滑動到距離底部 800px 時觸發載入
             if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 800) {
                 isRendering = true;
                 if (currentRenderCount < currentDisplayData.length) {
@@ -544,7 +553,6 @@
             return `<div style="display:flex;gap:2px;justify-content:center;"><select class="date-select ${prefix}-m-${r['_rowIndex']}" onchange="syncDateSelect('${r['來源分頁']}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${mOpts}</select><select class="date-select ${prefix}-d-${r['_rowIndex']}" onchange="syncDateSelect('${r['來源分頁']}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${dOpts}</select></div>`;
         }
 
-        // 🌟 核心：改成懶加載專用的生成函數
         function generateRowsHtml(dataChunk) {
             return dataChunk.map(r => {
                 const s = formatStatus(r['使用狀態']); let loc = []; for(let k in r) if(k.includes('位置') && r[k]) loc.push(String(r[k]).trim());
@@ -560,10 +568,8 @@
             }).join('');
         }
 
-        // 🌟 初始化顯示：只畫出前 50 筆，其餘的靠滑動載入
         function displayData(data) {
-            currentDisplayData = data;
-            currentRenderCount = Math.min(RENDER_CHUNK, data.length);
+            currentDisplayData = data; currentRenderCount = Math.min(RENDER_CHUNK, data.length);
             document.getElementById('tableBody').innerHTML = generateRowsHtml(currentDisplayData.slice(0, currentRenderCount));
         }
 
