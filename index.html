@@ -321,7 +321,6 @@
         const RENDER_CHUNK = 50;
         let isRendering = false;
 
-        // 🌟 防彈字串轉換：自動將名稱中的引號過濾，避免破壞 HTML
         function safeStr(str) { return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         function sortChemicalData(data) {
@@ -486,7 +485,6 @@
             return `<div style="display:flex;gap:2px;justify-content:center;"><select class="date-select ${prefix}-m-${r['_rowIndex']}" onchange="syncDateSelect('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${mOpts}</select><select class="date-select ${prefix}-d-${r['_rowIndex']}" onchange="syncDateSelect('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${dOpts}</select></div>`;
         }
 
-        // 🌟 防彈渲染：加入 Try Catch，就算單筆資料破掉，也不會整組消失
         function generateRowsHtml(dataChunk) {
             return dataChunk.map(r => {
                 try {
@@ -496,7 +494,6 @@
                     let selectHtml = `<select class="sheet-dropdown ${colorClass}" data-original="${s}" onchange="syncStatus(this,'${safeStr(r['來源分頁'])}',${r['_rowIndex']},${r['_statusColIndex']})">` + opts.map(o => `<option value="${o}" ${o===s?'selected':''}>${o}</option>`).join('') + `</select>`;
                     let isOrdered = String(r['需訂購'] || '').toLowerCase() === 'true'; let orderHtml = r['_orderColIndex'] > 0 ? `<input type="checkbox" class="form-check-input order-checkbox order-chk-${r['_rowIndex']}" ${isOrdered ? 'checked' : ''} onchange="syncOrderCheck(this, '${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r['_orderColIndex']})">` : '-';
                     
-                    // 🌟 嚴格防護藥品名稱中的特殊符號
                     let actionHtml = `<button class="action-btn edit-btn" title="編輯" onclick="openEditModal('${safeStr(r['來源分頁'])}', ${r['_rowIndex']})">${svgEdit}</button> <button class="action-btn delete-btn" title="刪除" onclick="confirmDelete('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, '${safeStr(r['藥品名稱'])}')">${svgDelete}</button>`;
                     return `<tr><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="藥品名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="濃度">${r['濃度']||'-'}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格/廠商" class="spec-cell"><div class="spec-vendor-container"><span class="spec-item">${r['規格']||'-'}</span><span class="vendor-item">${r['廠商']||'-'}</span></div></td><td data-label="位置"><span class="badge-soft badge-location">${r['位置']||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="使用狀態">${selectHtml}</td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購">${orderHtml}</td><td data-label="GHS">${ghsBadge}</td><td data-label="操作" style="white-space:nowrap;">${actionHtml}</td></tr>`;
                 } catch(e) {
@@ -554,11 +551,34 @@
             }
         }
 
+        // 🌟 防呆搜尋核心邏輯
         document.getElementById('searchInput').oninput = function() {
-            clearTimeout(searchTimeout); const term = this.value.toLowerCase().trim(); updateUIVisibility(term); 
+            clearTimeout(searchTimeout); 
+            const originalTerm = this.value.trim(); 
+            updateUIVisibility(originalTerm); 
+            
             searchTimeout = setTimeout(() => { 
-                if(!term) return displayData(chemicalData); 
-                const filtered = chemicalData.filter(r => { const name = String(r['藥品名稱'] || '').toLowerCase(); const cas = String(r['CAS  NO.'] || r['CAS NO.'] || '').toLowerCase(); const isFuzzyMatch = term.length > 4 && name.split(/[\s\-]+/).some(w => levenshtein(term, w) <= 2); return name.includes(term) || cas.includes(term) || isFuzzyMatch; });
+                if(!originalTerm) return displayData(chemicalData); 
+                
+                // 1. 將使用者的搜尋字串轉小寫，並剔除所有空白與連字號
+                const term = originalTerm.toLowerCase().replace(/[\s\-]/g, '');
+
+                const filtered = chemicalData.filter(r => { 
+                    const rawName = String(r['藥品名稱'] || ''); 
+                    const rawCas = String(r['CAS  NO.'] || r['CAS NO.'] || ''); 
+
+                    // 2. 將資料庫的名稱與 CAS 也轉小寫並剔除空白與連字號
+                    const cleanName = rawName.toLowerCase().replace(/[\s\-]/g, '');
+                    const cleanCas = rawCas.toLowerCase().replace(/[\s\-]/g, '');
+
+                    // 3. 嚴格包含比對 (無視空白、連字號、大小寫)
+                    if (cleanName.includes(term) || cleanCas.includes(term)) return true;
+
+                    // 4. 容錯拼寫比對 (預防使用者拼錯字，如 citirc)
+                    const isFuzzyMatch = originalTerm.length > 4 && rawName.toLowerCase().split(/[\s\-]+/).some(w => levenshtein(originalTerm.toLowerCase(), w) <= 2);
+                    return isFuzzyMatch;
+                });
+                
                 displayData(filtered); 
             }, 250); 
         };
