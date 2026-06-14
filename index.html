@@ -1,474 +1,607 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>🧪 LPC lab 藥品管理系統</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #f4f6f9; font-family: "Helvetica Neue", Arial, sans-serif; color: #333; }
-    .navbar { background: linear-gradient(135deg, #4f46e5, #3b82f6); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    .nav-tabs .nav-link { color: #4b5563; font-weight: 500; border: none; padding: 12px 20px; }
-    .nav-tabs .nav-link.active { color: #4f46e5; border-bottom: 3px solid #4f46e5; background: none; }
-    .table-container { overflow-x: auto; background: white; border-radius: 8px; padding: 15px; }
-    
-    /* 🐕 右下角智慧小狗對話組件樣式 */
-    #chat-widget { position: fixed; bottom: 25px; right: 25px; z-index: 9999; }
-    #chat-btn { 
-      width: 60px; height: 60px; border-radius: 50%; 
-      background-color: #4f46e5; border: none; 
-      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3); 
-      cursor: pointer; display: flex; align-items: center; justify-content: center; 
-      transition: transform 0.2s; 
-    }
-    #chat-btn:hover { transform: scale(1.08); background-color: #4338ca; }
-    #chat-btn img { width: 38px; height: 38px; object-fit: contain; }
-    
-    #chat-box { 
-      width: 380px; height: 520px; background: white; 
-      border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.15); 
-      display: none; flex-direction: column; overflow: hidden; 
-      position: absolute; bottom: 80px; right: 0; 
-    }
-    .chat-header { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; }
-    .chat-header .title-area { display: flex; align-items: center; gap: 10px; }
-    .chat-header img { width: 28px; height: 28px; background: white; border-radius: 50%; padding: 2px; }
-    .chat-header .close-btn { background: none; border: none; color: white; font-size: 22px; cursor: pointer; }
-    
-    .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
-    .msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-break: break-all; }
-    .msg.bot { background: white; align-self: flex-start; color: #1e293b; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border-left: 4px solid #3b82f6; }
-    .msg.user { background: #4f46e5; align-self: flex-end; color: white; }
-    
-    .chat-footer { padding: 12px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; }
-    .chat-footer input { flex: 1; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 24px; font-size: 14px; outline: none; }
-    .chat-footer button { background: #4f46e5; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 LPC lab 藥品系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f5f7f9; font-family: -apple-system, sans-serif; padding-top: 15px; color: #334155; }
+        .main-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 0 10px; padding-bottom: 40px; }
+        .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); padding: 15px 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .top-header-card { display: flex; justify-content: center; padding: 20px 15px; }
+        .header-content-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 1400px; } 
+        .top-logo { height: 145px; width: auto; object-fit: contain; flex-shrink: 0; margin-right: -45px; z-index: 2; position: relative; } 
+        .top-search-area { flex-grow: 1; width: 100%; z-index: 1; position: relative; padding-left: 45px; }
+        .top-search-title { font-weight: 800; color: #1e293b; font-size: 1.6rem; text-align: center; margin-bottom: 12px; padding-right: 45px; } 
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinning { animation: spin 1s linear infinite; pointer-events: none; }
+        .search-input { border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 15px; font-size: 1rem; background-color: #f8fafc; transition: 0.3s; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .search-input:focus { outline: none; border-color: #4338ca; background-color: #ffffff; }
+        
+        /* 🌟 備忘錄區塊：全面改為灰階配色 */
+        .memo-card { background: #f8fafc; border-radius: 16px; padding: 15px 20px; margin-bottom: 15px; border: 2px dashed #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: none; }
+        .memo-title { font-weight: 800; color: #475569; margin-bottom: 10px; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+        .memo-title::before { content: '📝'; margin-right: 6px; } /* 換成不會有紅色的筆記本符號 */
+        .memo-input-group { display: flex; gap: 8px; margin-bottom: 10px; }
+        
+        .memo-author-select { border-radius: 10px; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 0.95rem; outline: none; background: #f1f5f9; color: #475569; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+        .memo-input { flex-grow: 1; border-radius: 10px; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 0.95rem; outline: none; background: #ffffff; transition: 0.3s; }
+        .memo-btn { background: #64748b; color: #ffffff; font-weight: 700; border: none; border-radius: 10px; padding: 8px 16px; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 0.9rem; }
+        .memo-btn:hover { background: #475569; }
+        .memo-item { background: #ffffff; padding: 10px 14px; border-radius: 10px; border-left: 4px solid #94a3b8; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;}
+        .memo-text { font-size: 0.9rem; color: #334155; flex-grow: 1; margin-right: 12px; display: flex; align-items: center; gap: 8px; }
+        .memo-author-badge { background-color: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; white-space: nowrap; }
+        .memo-meta { font-size: 0.7rem; color: #64748b; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+        .memo-delete { background: #f1f5f9; border: none; color: #94a3b8; border-radius: 6px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .memo-delete:hover { background: #e2e8f0; color: #475569; }
+        
+        .buy-list-card { background: #fff5f5; border: 2px solid #feb2b2; border-radius: 16px; padding: 15px; margin-bottom: 20px; display: none; }
+        .buy-list-title { color: #c53030; font-weight: 800; font-size: 1rem; margin-bottom: 10px; text-align: center; }
+        .scroll-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .table-wrapper { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow-x: auto; display: none; }
+        .table thead th { background-color: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.8rem; padding: 8px 4px; text-align: center; white-space: nowrap; }
+        .table tbody td { padding: 6px 4px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; text-align: center; white-space: nowrap; font-size: 0.85rem; }
+        .table tbody td.name-cell { white-space: normal; min-width: 140px; max-width: 250px; text-align: left; word-break: break-word; font-weight: 700; color: #2563eb;}
+        .spec-vendor-container { width: 100%; text-align: center; line-height: 1.2; }
+        .spec-item { display: block; font-weight: 500; }
+        .vendor-item { display: block; font-size: 0.85em; color: #64748b; }
+        .badge-soft { padding: 4px 6px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; display: inline-block; }
+        .badge-sheet { background-color: #f3e8ff; color: #7e22ce; }
+        .badge-location { background-color: #e0f2fe; color: #0369a1; }
+        .badge-ghs-yes { background-color: #dcfce7; color: #15803d; } 
+        .badge-ghs-no { background-color: #f1f5f9; color: #64748b; }   
+        .badge-num { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 4px; font-family: monospace; font-weight: bold; font-size: 0.8rem; }
+        .sheet-dropdown { border: 1px solid transparent; border-radius: 10px; padding: 2px 18px 2px 6px; font-weight: 700; display: inline-block; min-width: 75px; font-size: 0.85rem; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%2364748b" d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 4px center; cursor: pointer; }
+        .buyer-dropdown { max-width: 80px; text-overflow: ellipsis; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 16px 2px 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; background-color: #f8fafc; color: #2563eb; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"><path fill="%2364748b" d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 4px center; outline: none; }
+        .date-select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 12px 2px 2px; font-size: 0.8rem; font-weight: 600; color: #2563eb; background-color: #f8fafc; outline: none; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24"><path fill="%2364748b" d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 2px center; cursor: pointer; text-align: center; }
+        .order-checkbox { transform: scale(1.1); cursor: pointer; accent-color: #e11d48; margin: 0; }
+        .status-danger { background-color: #fee2e2 !important; color: #b91c1c !important; }
+        .status-warning { background-color: #ffedd5 !important; color: #ea580c !important; }
+        .status-caution { background-color: #fef9c3 !important; color: #a16207 !important; }
+        .status-normal { background-color: #f1f5f9; color: #334155; }
+
+        .action-btn { background: none; border: none; cursor: pointer; color: #94a3b8; transition: all 0.2s ease; padding: 4px; display: inline-flex; align-items: center; justify-content: center; }
+        .action-btn.edit-btn:hover { color: #3b82f6; transform: scale(1.15); }
+        .action-btn.delete-btn:hover { color: #ef4444; transform: scale(1.15); }
+        
+        .modal-body label, .add-form-label { font-weight: 600; color: #475569; font-size: 0.9rem; margin-bottom: 4px; }
+        .modal-body .form-control, .modal-body .form-select, .add-form-input { border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; }
+
+        @media (max-width: 768px) {
+            .top-header-card { padding: 15px 10px; }
+            .header-content-wrapper { flex-direction: row; align-items: center; justify-content: flex-start; } 
+            .top-logo { height: 85px; margin-right: -25px; } 
+            .top-search-area { padding-left: 25px; } 
+            .top-search-title { font-size: 1.3rem; text-align: left; padding-right: 0; margin-bottom: 8px; } 
+            
+            .top-search-area .d-flex { flex-direction: column; gap: 8px !important; }
+            #openAddBtn { width: 100%; padding: 10px; }
+
+            .memo-input-group { flex-direction: column; gap: 8px; }
+            .memo-input, .memo-author-select, .memo-btn { width: 100%; margin: 0; }
+            .memo-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .memo-text { margin-right: 0; width: 100%; word-break: break-word; }
+            .memo-meta { width: 100%; justify-content: space-between; }
+
+            .mobile-card-table thead { display: none !important; } 
+            .mobile-card-table, .mobile-card-table tbody, .mobile-card-table tr, .mobile-card-table td { display: block; width: 100%; } 
+            .mobile-card-table tr { margin-bottom: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 15px; border: 1px solid #edf2f7; position: relative; } 
+            .mobile-card-table td { border: none; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #f1f5f9; text-align: right; } 
+            .mobile-card-table td::before { content: attr(data-label); font-weight: 700; color: #94a3b8; font-size: 0.85rem; } 
+            .mobile-card-table td.sheet-cell { display: block; text-align: left !important; border-bottom: none; padding-bottom: 0; margin-bottom: 5px; padding-top: 0; }
+            .mobile-card-table td.sheet-cell::before { display: none !important; }
+            .mobile-card-table td.name-cell { display: block; font-size: 1.15rem; font-weight: 800; color: #4338ca; text-align: left !important; border-bottom: 2px solid #f1f5f9; margin-bottom: 10px; padding-bottom: 12px; padding-top: 0; } 
+            .mobile-card-table td.name-cell::before { display: none !important; }
+            .spec-vendor-container { display: grid !important; grid-template-columns: 1fr 1fr !important; width: 100%; align-items: center; }
+            .spec-item { grid-column: 1; text-align: center; padding-left: 10px; display: block; }
+            .vendor-item { grid-column: 2; text-align: right; display: block; margin-top: 0; }
+        }
+
+        #ai-chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: -apple-system, sans-serif; }
+        #ai-chat-btn { width: 60px; height: 60px; border-radius: 50%; background-color: #4338ca; color: white; font-size: 28px; border: none; box-shadow: 0 4px 15px rgba(67, 56, 202, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        #ai-chat-btn:hover { transform: scale(1.1); }
+        #ai-chat-box { position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; border: 1px solid #e2e8f0; overflow: hidden; }
+        #ai-chat-header { background: #4338ca; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        #ai-chat-close { cursor: pointer; font-size: 1.2rem; }
+        #ai-chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; word-wrap: break-word;}
+        .chat-msg.user { align-self: flex-end; background: #4338ca; color: white; border-bottom-right-radius: 2px; }
+        .chat-msg.bot { align-self: flex-start; background: #e2e8f0; color: #1e293b; border-bottom-left-radius: 2px; }
+        .chat-msg.bot strong { font-weight: bold; color: #000; }
+        #ai-chat-input-area { display: flex; padding: 12px; border-top: 1px solid #e2e8f0; background: white; gap: 8px; }
+        #ai-chat-input { flex-grow: 1; border: 1px solid #cbd5e1; border-radius: 20px; padding: 8px 15px; outline: none; font-size: 0.95rem; }
+        #ai-chat-send { background: none; border: none; color: #4338ca; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; }
+        @media (max-width: 768px) { #ai-chat-box { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; border-radius: 0; } }
+    </style>
 </head>
 <body>
+    <div class="container main-container">
+        <div class="glass-card top-header-card" style="margin-top: 15px;">
+            <div class="header-content-wrapper">
+                <img src="https://drive.google.com/thumbnail?id=1t7X5xU8BywgUpGoO_bl4NKOill0eJA5f&sz=w600" class="top-logo" alt="Lab Logo">
+                <div class="top-search-area">
+                    <h3 class="top-search-title">
+                        🧪 LPC lab 藥品系統
+                        <span id="refreshBtn" onclick="forceRefresh()" style="cursor: pointer; font-size: 1.2rem; margin-left: 5px; display: inline-block; user-select: none;" title="手動同步最新資料">🔄</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="searchInput" class="form-control search-input" placeholder="秒速載入中..." disabled>
+                        <button id="openAddBtn" class="btn text-white shadow-sm" style="background-color: #4338ca; font-weight: 700; border-radius: 12px; white-space: nowrap; padding: 0 20px; transition: 0.2s;" onclick="openAddModal()" disabled>＋ 新增藥品</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <script>
-    window.serverData = <?!= serverData ?>;
-  </script>
+        <div class="memo-card" id="memoSection">
+            <div class="memo-title">藥品備忘錄</div>
+            <div class="memo-input-group">
+                <input type="text" id="memoInput" class="memo-input" placeholder="輸入藥品相關留言，如藥品資訊有誤，需藥品管理人員修改..." onkeypress="if(event.key==='Enter') addNewMemo()">
+                <select id="memoAuthorSelect" class="memo-author-select" onchange="handleBuyerAction(this, null, null, null, true)">
+                    <option value="">👤 留言者...</option>
+                </select>
+                <button class="memo-btn" onclick="addNewMemo()">＋ 留言</button>
+            </div>
+            <div class="memo-list" id="memoListContainer"></div>
+        </div>
 
-  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand fw-bold" href="#"><i class="fas fa-flask me-2"></i>LPC Lab 藥品管理系統</a>
-      <button class="btn btn-light btn-sm fw-bold text-primary" onclick="refreshSystemData()">
-        <i class="fas fa-sync-alt me-1"></i>強制同步雲端
-      </button>
+        <div id="buyListContainer" class="buy-list-card">
+            <div class="buy-list-title">⚠️ 須購買藥品提醒</div>
+            <div class="scroll-container">
+                <table class="table table-sm align-middle mb-0 mobile-card-table" id="buyListTable">
+                    <thead><tr><th>藥櫃</th><th>藥品名稱</th><th>CAS</th><th>規格</th><th>位置</th><th>編號</th><th>狀態</th><th>請購人</th><th>請購日</th><th>訂購日</th><th>需訂購</th></tr></thead>
+                    <tbody id="buyListBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-wrapper" id="tableWrapper">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 mobile-card-table" id="resultsTable">
+                    <thead><tr><th>藥櫃</th><th>藥品名稱</th><th>濃度</th><th>CAS NO.</th><th>規格/廠商</th><th>位置</th><th>編號</th><th>使用狀態</th><th>請購人</th><th>請購日</th><th>訂購日</th><th>需訂購</th><th>GHS</th><th>操作</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </nav>
 
-  <div class="container-fluid px-4">
-    <ul class="nav nav-tabs mb-4" id="systemTabs" role="tablist">
-      <li class="nav-item">
-        <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-panel" type="button"><i class="fas fa-boxes me-2"></i>藥品庫存清單</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" id="memo-tab" data-bs-toggle="tab" data-bs-target="#memo-panel" type="button"><i class="fas fa-sticky-note me-2"></i>佈告欄備忘錄</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config-panel" type="button"><i class="fas fa-users-cog me-2"></i>請購人員管理</button>
-      </li>
-    </ul>
-
-    <div class="tab-content" id="systemTabsContent">
-      <div class="tab-pane fade show active" id="inventory-panel" role="tabpanel">
-        <div class="card p-4">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-            <div class="d-flex gap-2 align-items-center">
-              <input type="text" id="tableSearch" class="form-control form-control-sm" placeholder="輸入名稱/CAS號進行即時搜尋..." oninput="filterInventoryTable()" style="width: 260px;">
-              <select id="filterTab" class="form-select form-select-sm" onchange="filterInventoryTable()" style="width: 150px;">
-                <option value="">所有分頁</option>
-              </select>
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <div class="modal-header" style="background-color: #f8fafc; border-radius: 16px 16px 0 0; border-bottom: 1px solid #e2e8f0;">
+                    <h5 class="modal-title" style="font-weight: 800; color: #1e293b;">✨ 新增藥品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="add-form-label">藥品名稱 <span class="text-danger">*</span></label>
+                            <input type="text" id="addName" class="form-control add-form-input" placeholder="例：Citric acid anhydrous">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">分類 <span class="text-danger">*</span></label>
+                            <select id="addSheet" class="form-select add-form-input" onchange="handleAddSheetChange()"></select>
+                            <div class="input-group mt-2">
+                                <input type="text" id="newSheetName" class="form-control add-form-input" placeholder="新增分類..." style="border-right: none;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="addNewSheetOption()" style="background: white; border-left: none; border-color: #cbd5e1; font-weight: bold; color: #475569;">＋ 加入</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">位置 <small style="color: #94a3b8; font-weight: normal;">跟隨分類</small></label>
+                            <select id="addLocation" class="form-select add-form-input">
+                                <option value="">- 未標示 -</option>
+                            </select>
+                            <div id="addLocHint" style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">請先選擇分類</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">CAS NO.</label>
+                            <input type="text" id="addCas" class="form-control add-form-input">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">濃度</label>
+                            <input type="text" id="addConc" class="form-control add-form-input">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">規格</label>
+                            <input type="text" id="addSpec" class="form-control add-form-input">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">廠商</label>
+                            <select id="addVendor" class="form-select add-form-input"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">使用狀態</label>
+                            <select id="addStatus" class="form-select add-form-input">
+                                <option value="">未填</option><option value="100%">100%</option><option value="90%">90%</option><option value="80%">80%</option><option value="70%">70%</option><option value="60%">60%</option><option value="50%">50%</option><option value="40%">40%</option><option value="30%">30%</option><option value="20%">20%</option><option value="10%">10%</option><option value="0%">0%</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">編號</label>
+                            <input type="text" id="addNum" class="form-control add-form-input">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="add-form-label">GHS</label>
+                            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; height: 38px; background: white;">
+                                <input class="form-check-input mt-0 me-2" type="checkbox" id="addGhs" style="transform: scale(1.1); cursor: pointer;">
+                                <label class="form-check-label mb-0" for="addGhs" id="addGhsLabel" style="cursor: pointer; color: #475569; font-weight: 600;">否 (無標籤)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">取消</button>
+                    <button type="button" class="btn text-white" onclick="submitNewChemical()" id="addChemBtn" style="border-radius: 8px; font-weight: 600; background-color: #4338ca; border: none;">確認新增</button>
+                </div>
             </div>
-            <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addModal">
-              <i class="fas fa-plus me-1"></i>新增登記藥品
-            </button>
-          </div>
-          
-          <div class="table-container">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>來源分頁</th><th>藥品名稱</th><th>濃度</th><th>CAS NO.</th><th>規格</th><th>位置</th><th>狀態</th><th>需訂購</th><th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="inventoryBody">
-                </tbody>
-            </table>
-          </div>
         </div>
-      </div>
-
-      <div class="tab-pane fade" id="memo-panel" role="tabpanel">
-        <div class="card p-4">
-          <div class="row g-3 mb-4">
-            <div class="col-md-8">
-              <input type="text" id="memoText" class="form-control" placeholder="撰寫新的實驗室提醒或請購備忘錄...">
-            </div>
-            <div class="col-md-2">
-              <select id="memoAuthor" class="form-select">
-                <option value="實驗室成員">填寫人</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <button class="btn btn-success w-100 fw-bold" onclick="addNewMemo()">發佈留言</button>
-            </div>
-          </div>
-          <div class="row row-cols-1 row-cols-md-3 g-3" id="memoContainer">
-            </div>
-        </div>
-      </div>
-
-      <div class="tab-pane fade" id="config-panel" role="tabpanel">
-        <div class="card p-4" style="max-width: 500px;">
-          <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-user-plus me-2"></i>動態增刪請購人員名單</h6>
-          <div class="input-group mb-3">
-            <input type="text" id="newBuyerName" class="form-control" placeholder="輸入人員縮寫代號 (如: WYC)">
-            <button class="btn btn-primary fw-bold" onclick="addNewBuyer()">新增人員</button>
-          </div>
-          <ul class="list-group" id="buyerListGroup">
-            </ul>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold">🧪 新增登記藥品</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <div class="modal-header" style="background-color: #f8fafc; border-radius: 16px 16px 0 0; border-bottom: 1px solid #e2e8f0;">
+                    <h5 class="modal-title" style="font-weight: 800; color: #1e293b;">📝 編輯藥品資料</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label>藥品名稱</label>
+                            <input type="text" id="editName" class="form-control" style="font-weight: 700; color: #2563eb;">
+                        </div>
+                        <div class="col-md-6">
+                            <label>分類/藥櫃 (系統鎖定保護)</label>
+                            <input type="text" id="editSheet" class="form-control" disabled style="background-color: #f1f5f9;">
+                        </div>
+                        <div class="col-md-6">
+                            <label>CAS NO.</label>
+                            <input type="text" id="editCas" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label>濃度</label>
+                            <input type="text" id="editConc" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label>規格</label>
+                            <input type="text" id="editSpec" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label>廠商</label>
+                            <select id="editVendor" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>位置</label>
+                            <select id="editLocation" class="form-select" onchange="handleLocationChange(this)"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>編號</label>
+                            <input type="text" id="editNum" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label>使用狀態</label>
+                            <select id="editStatus" class="form-select">
+                                <option value="100%">100%</option><option value="90%">90%</option><option value="80%">80%</option><option value="70%">70%</option><option value="60%">60%</option><option value="50%">50%</option><option value="40%">40%</option><option value="30%">30%</option><option value="20%">20%</option><option value="10%">10%</option><option value="0%">0%</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>GHS 標籤</label>
+                            <select id="editGhs" class="form-select">
+                                <option value="true">✅ 是 (有標籤)</option>
+                                <option value="false">❌ 否 (無標籤)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditData()" id="saveEditBtn" style="border-radius: 8px; font-weight: 600; background-color: #3b82f6; border: none;">儲存修改</button>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-          <form id="addChemicalForm">
-            <div class="mb-2">
-              <label class="form-label small fw-bold">來源分頁櫃位</label>
-              <input type="text" id="add_sheet" class="form-control form-control-sm" placeholder="例如: 藥品A" required>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small fw-bold">藥品名稱</label>
-              <input type="text" id="add_name" class="form-control form-control-sm" required>
-            </div>
-            <div class="row g-2 mb-2">
-              <div class="col">
-                <label class="form-label small fw-bold">濃度</label>
-                <input type="text" id="add_conc" class="form-control form-control-sm">
-              </div>
-              <div class="col">
-                <label class="form-label small fw-bold">CAS NO.</label>
-                <input type="text" id="add_cas" class="form-control form-control-sm">
-              </div>
-            </div>
-            <div class="row g-2 mb-2">
-              <div class="col">
-                <label class="form-label small fw-bold">規格</label>
-                <input type="text" id="add_spec" class="form-control form-control-sm">
-              </div>
-              <div class="col">
-                <label class="form-label small fw-bold">廠牌廠商</label>
-                <input type="text" id="add_vendor" class="form-control form-control-sm">
-              </div>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col">
-                <label class="form-label small fw-bold">存放位置</label>
-                <input type="text" id="add_loc" class="form-control form-control-sm">
-              </div>
-              <div class="col">
-                <label class="form-label small fw-bold">內部編號</label>
-                <input type="text" id="add_num" class="form-control form-control-sm">
-              </div>
-            </div>
-            <div class="mb-3 form-check">
-              <input class="form-check-input" type="checkbox" id="add_ghs">
-              <label class="form-check-label small fw-bold">需包含 GHS 標籤勾選框</label>
-            </div>
-            <button type="button" class="btn btn-primary w-100 fw-bold btn-sm" onclick="submitAddChemical()">確認存入雲端表格</button>
-          </form>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div id="chat-widget">
-    <button id="chat-btn" onclick="toggleChatBox()">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="🐕">
-    </button>
-    <div id="chat-box">
-      <div class="chat-header">
-        <div class="title-area">
-          <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="🐕">
-          <span>林伯樵AI 助理</span>
-        </div>
-        <button class="close-btn" onclick="toggleChatBox()">&times;</button>
-      </div>
-      <div class="chat-body" id="chatBody">
-        <div class="msg bot">你好！我是林伯樵AI 小管家 🤖</div>
-      </div>
-      <div class="chat-footer">
-        <input type="text" id="chatInput" placeholder="詢問庫存位置或多步驟化學機制..." onkeypress="handleChatKeyPress(event)">
-        <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-      </div>
+    <div id="ai-chat-widget">
+        <div id="ai-chat-box"><div id="ai-chat-header"><span><img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width:22px; height:22px; margin-right:6px; border-radius:50%; background:white; padding:2px; vertical-align:sub;">林伯樵助理</span><span id="ai-chat-close" onclick="toggleChat()">✖</span></div><div id="ai-chat-messages"><div class="chat-msg bot">你好！我是林伯樵AI 小管家 🤖</div></div><div id="ai-chat-input-area"><input type="text" id="ai-chat-input" placeholder="問問 AI..." onkeypress="if(event.key==='Enter') sendChatMessage()"><button id="ai-chat-send" onclick="sendChatMessage()">➤</button></div></div>
+        <button id="ai-chat-btn" onclick="toggleChat()" title="開啟 AI 助理"><img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width:36px; height:36px; object-fit:contain;"></button>
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    let globalData = [];
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    // 系統冷啟動初始化
-    document.addEventListener("DOMContentLoaded", function() {
-      if (window.serverData) {
-        initSystem(window.serverData);
-      }
-    });
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxJBLB2yQgs17l9fzbSVBNd94OseyyQrX-PlbfeZkrbyRpCYHPxiK8d62tz25RfevWUeQ/exec";
 
-    function apiCall(action, data = {}) {
-      return fetch('', {
-        method: 'POST',
-        body: JSON.stringify({ action: action, ...data }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.error) throw new Error(res.error);
-        return res.data;
-      });
-    }
+        const svgEdit = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+        const svgDelete = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 
-    function initSystem(sysData) {
-      globalData = sysData.data || [];
-      renderInventoryTable(globalData);
-      renderMemos(sysData.memos || []);
-      renderBuyers(sysData.buyers || []);
-      
-      // 動態更新下拉選單的分頁標籤
-      const filterTab = document.getElementById('filterTab');
-      filterTab.innerHTML = '<option value="">所有分頁</option>';
-      if(sysData.locationsMap) {
-        Object.keys(sysData.locationsMap).forEach(sheet => {
-          filterTab.innerHTML += `<option value="${sheet}">${sheet}</option>`;
+        let chemicalData = []; let buyerList = []; let memoList = []; let locationsMap = {}; let vendorList = []; 
+        let searchTimeout = null; let currentEditRow = null; let editModalInstance = null; let addModalInstance = null;
+        const opts = ['100%','90%','80%','70%','60%','50%','40%','30%','20%','10%','0%'];
+        const LOCAL_STORAGE_KEY = 'LPC_LAB_DATA_V7';
+
+        let currentDisplayData = [];
+        let currentRenderCount = 0;
+        const RENDER_CHUNK = 50;
+        let isRendering = false;
+
+        function safeStr(str) { return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        function sortChemicalData(data) {
+            if (!Array.isArray(data)) return [];
+            return data.map((item, index) => { item._originalIndex = index; return item; })
+                       .sort((a, b) => {
+                           if (a['來源分頁'] === b['來源分頁']) {
+                               let valA = String(a['編號'] || '').trim(); let valB = String(b['編號'] || '').trim();
+                               if (valA === '' && valB !== '') return 1; if (valA !== '' && valB === '') return -1;
+                               if (valA === '' && valB === '') return a._originalIndex - b._originalIndex;
+                               let numA = parseFloat(valA); let numB = parseFloat(valB);
+                               let isNumA = !isNaN(numA); let isNumB = !isNaN(numB);
+                               if (isNumA && isNumB) { if (numA !== numB) return numA - numB; } 
+                               else if (isNumA) return -1; else if (isNumB) return 1;
+                               if (valA !== valB) return valA.localeCompare(valB);
+                           }
+                           return a._originalIndex - b._originalIndex; 
+                       }).map(item => { delete item._originalIndex; return item; });
+        }
+
+        function levenshtein(a, b) { const tmp = []; for (let i = 0; i <= a.length; i++) tmp[i] = [i]; for (let j = 0; j <= b.length; j++) tmp[0][j] = j; for (let i = 1; i <= a.length; i++) { for (let j = 1; j <= b.length; j++) { tmp[i][j] = a[i - 1] === b[j - 1] ? tmp[i - 1][j - 1] : Math.min(tmp[i - 1][j - 1] + 1, tmp[i][j - 1] + 1, tmp[i - 1][j] + 1); } } return tmp[a.length][b.length]; }
+
+        async function apiCall(action, params = {}) {
+            params.action = action;
+            try {
+                const res = await fetch(API_URL, { method: 'POST', redirect: 'follow', body: JSON.stringify(params), headers: { 'Content-Type': 'text/plain;charset=utf-8' }});
+                const json = await res.json(); if (json.error) throw new Error(json.error); return json.data;
+            } catch (err) { console.error("API 錯誤:", err); throw err; }
+        }
+
+        function saveToLocal() { try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ data: chemicalData, buyers: buyerList, memos: memoList, locationsMap: locationsMap, vendors: vendorList })); } catch(e) {} }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            editModalInstance = new bootstrap.Modal(document.getElementById('editModal')); 
+            addModalInstance = new bootstrap.Modal(document.getElementById('addModal')); 
+
+            let activeData = null; const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (localData) { try { const parsed = JSON.parse(localData); if (parsed.data && parsed.data.length > 0) activeData = parsed; } catch(e) {} }
+
+            if (activeData) {
+                chemicalData = sortChemicalData(activeData.data || []); 
+                buyerList = activeData.buyers || []; memoList = activeData.memos || []; 
+                locationsMap = activeData.locationsMap || {}; vendorList = activeData.vendors || []; initUI(); 
+            } else { document.getElementById('searchInput').placeholder = "首次載入中，請稍候..."; }
+
+            apiCall('getLabData').then(jsonString => {
+                const response = JSON.parse(jsonString);
+                chemicalData = sortChemicalData(response.data || []); 
+                buyerList = response.buyers || []; memoList = response.memos || []; 
+                locationsMap = response.locationsMap || {}; vendorList = response.vendors || []; saveToLocal();
+                if(!activeData) initUI(); 
+                else { const term = document.getElementById('searchInput').value; if (!term) { renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); displayData(chemicalData); } }
+            }).catch(e => console.log("背景更新失敗", e));
+
+            document.getElementById('addGhs').addEventListener('change', function() {
+                const lbl = document.getElementById('addGhsLabel');
+                lbl.innerText = this.checked ? '✅ 是 (有標籤)' : '否 (無標籤)';
+                lbl.style.color = this.checked ? '#15803d' : '#475569';
+            });
         });
-      }
-    }
 
-    // 庫存表格渲染引擎
-    function renderInventoryTable(data) {
-      const tbody = document.getElementById('inventoryBody');
-      tbody.innerHTML = '';
-      if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">查無任何與關鍵字吻合的庫存數據</td></tr>';
-        return;
-      }
-      data.forEach(r => {
-        const tr = document.createElement('tr');
-        const checkedAttr = (r['需訂購'] === 'true' || r['需訂購'] === true) ? 'checked' : '';
-        tr.innerHTML = `
-          <td><span class="badge bg-secondary">${r['來源分頁']||'-'}</span></td>
-          <td class="fw-bold">${r['藥品名稱']||'-'}</td>
-          <td>${r['濃度']||'-'}</td>
-          <td><code>${r['CAS NO.']||r['CAS  NO.']||'-'}</code></td>
-          <td>${r['規格']||'-'}</td>
-          <td><i class="fas fa-map-marker-alt text-danger me-1"></i>${r['位置']||'-'}</td>
-          <td>
-            <select class="form-select form-select-sm py-0" onchange="updateStatus('${r['來源分頁']}', ${r._rowIndex}, ${r._statusColIndex}, this.value)">
-              <option value="充足" ${r['ប្រើប្រាស់狀態'] === '充足' || r['使用狀態'] === '充足' ? 'selected' : ''}>充足</option>
-              <option value="一般" ${r['使用狀態'] === '一般' ? 'selected' : ''}>一般</option>
-              <option value="耗盡" ${r['使用狀態'] === '耗盡' ? 'selected' : ''}>耗盡</option>
-            </select>
-          </td>
-          <td>
-            <input type="checkbox" class="form-check-input" ${checkedAttr} onchange="toggleOrder('${r['來源分頁']}', ${r._rowIndex}, this, ${r._orderColIndex}, ${r._buyerColIndex}, ${r._reqDateColIndex}, ${r._orderDateColIndex})">
-          </td>
-          <td>
-            <button class="btn btn-link text-danger p-0 m-0" onclick="deleteChemicalRow('${r['來源分頁']}', ${r._rowIndex})"><i class="fas fa-trash-alt"></i></button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+        function initUI() {
+            try {
+                document.getElementById('tableWrapper').style.display = 'block'; document.getElementById('memoSection').style.display = 'block';
+                const searchInput = document.getElementById('searchInput'); searchInput.disabled = false; 
+                searchInput.placeholder = `🔍 搜尋 ${chemicalData.length} 筆資料...`;
+                document.getElementById('openAddBtn').disabled = false;
+                renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); displayData(chemicalData);
+            } catch (err) { console.error("初始化失敗", err); }
+        }
 
-    // 前端即時過濾功能
-    function filterInventoryTable() {
-      const keyword = document.getElementById('tableSearch').value.toLowerCase().trim();
-      const sheetFilter = document.getElementById('filterTab').value;
-      
-      const filtered = globalData.filter(r => {
-        const matchSheet = !sheetFilter || r['來源分頁'] === sheetFilter;
-        const name = String(r['藥品名稱']||'').toLowerCase();
-        const cas = String(r['CAS NO.']||r['CAS  NO.']||'').toLowerCase();
-        return matchSheet && (!keyword || name.includes(keyword) || cas.includes(keyword));
-      });
-      renderInventoryTable(filtered);
-    }
+        window.addEventListener('scroll', () => {
+            if (isRendering) return;
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 800) {
+                isRendering = true;
+                if (currentRenderCount < currentDisplayData.length) {
+                    const nextChunk = currentDisplayData.slice(currentRenderCount, currentRenderCount + RENDER_CHUNK);
+                    currentRenderCount += nextChunk.length;
+                    document.getElementById('tableBody').insertAdjacentHTML('beforeend', generateRowsHtml(nextChunk));
+                }
+                setTimeout(() => { isRendering = false; }, 100);
+            }
+        });
 
-    function updateStatus(sheet, row, col, val) {
-      if(!col) return;
-      apiCall('updateSheetStatus', { sheetName: sheet, rowIndex: row, colIndex: col, newValue: val });
-    }
+        function openAddModal() {
+            document.getElementById('addName').value = ''; document.getElementById('addSheet').value = ''; document.getElementById('addLocation').innerHTML = '<option value="">- 未標示 -</option>'; document.getElementById('addLocHint').innerText = '請先選擇分類'; document.getElementById('addCas').value = ''; document.getElementById('addConc').value = ''; document.getElementById('addSpec').value = ''; document.getElementById('addVendor').value = ''; document.getElementById('addNum').value = ''; document.getElementById('addStatus').value = ''; document.getElementById('addGhs').checked = false; document.getElementById('addGhsLabel').innerText = '否 (無標籤)'; document.getElementById('addGhsLabel').style.color = '#475569';
+            addModalInstance.show();
+        }
 
-    function toggleOrder(sheet, row, cb, orderIdx, buyerIdx, reqIdx, orderDateIdx) {
-      const map = { order: orderIdx, buyer: buyerIdx, reqDate: reqIdx, orderDate: orderDateIdx };
-      apiCall('toggleNeedToOrder', { sheetName: sheet, rowIndex: row, isChecked: cb.checked, colMap: map });
-    }
+        function forceRefresh() {
+            const btn = document.getElementById('refreshBtn'); const searchInput = document.getElementById('searchInput');
+            if (btn.classList.contains('spinning')) return; btn.classList.add('spinning'); searchInput.disabled = true; searchInput.placeholder = "🔄 同步最新資料中...";
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            apiCall('forceRefreshData').then(jsonString => {
+                const response = JSON.parse(jsonString); 
+                chemicalData = sortChemicalData(response.data || []); 
+                buyerList = response.buyers || []; memoList = response.memos || []; locationsMap = response.locationsMap || {}; vendorList = response.vendors || []; saveToLocal(); 
+                btn.classList.remove('spinning'); searchInput.disabled = false; 
+                searchInput.placeholder = `🔍 搜尋 ${chemicalData.length} 筆資料...`;
+                renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); document.getElementById('searchInput').dispatchEvent(new Event('input'));
+            }).catch(err => { btn.classList.remove('spinning'); searchInput.disabled = false; alert("更新失敗，請檢查網路。"); });
+        }
 
-    function deleteChemicalRow(sheet, row) {
-      if(confirm('確定要從雲端試算表中移除此列藥品資料嗎？')) {
-        apiCall('deleteChemical', { sheetName: sheet, rowIndex: row }).then(() => refreshSystemData());
-      }
-    }
+        function renderDropdowns() {
+            const memoAuth = document.getElementById('memoAuthorSelect'); let currAuth = memoAuth.value;
+            memoAuth.innerHTML = '<option value="">👤 留言者...</option>' + buyerList.map(b => `<option value="${b}">${b}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 新增人員...</option><option value="DELETE_USER">❌ 刪除人員...</option>`;
+            if (buyerList.includes(currAuth)) memoAuth.value = currAuth; else memoAuth.value = '';
+        }
 
-    function submitAddChemical() {
-      const sheet = document.getElementById('add_sheet').value.trim();
-      const name = document.getElementById('add_name').value.trim();
-      if(!sheet || !name) { alert('來源分頁與藥品名稱不可空白！'); return; }
-      
-      const rowData = {
-        '藥品名稱': name,
-        '濃度': document.getElementById('add_conc').value.trim(),
-        'CAS NO.': document.getElementById('add_cas').value.trim(),
-        '規格': document.getElementById('add_spec').value.trim(),
-        '廠商': document.getElementById('add_vendor').value.trim(),
-        '位置': document.getElementById('add_loc').value.trim(),
-        '編號': document.getElementById('add_num').value.trim(),
-        'GHS': document.getElementById('add_ghs').checked
-      };
-      
-      apiCall('addChemical', { sheetName: sheet, newRowData: rowData }).then(() => {
-        bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
-        document.getElementById('addChemicalForm').reset();
-        refreshSystemData();
-      });
-    }
+        function renderAddFormDropdowns() {
+            const sheetSelect = document.getElementById('addSheet'); const venSelect = document.getElementById('addVendor');
+            let sheets = Object.keys(locationsMap).sort();
+            sheetSelect.innerHTML = '<option value="">- 選擇分類 -</option>' + sheets.map(s => `<option value="${s}">${s}</option>`).join('');
+            venSelect.innerHTML = '<option value="">未填廠商</option>' + vendorList.map(v => `<option value="${v}">${v}</option>`).join('');
+        }
 
-    // 佈告欄備忘錄渲染
-    function renderMemos(memos) {
-      const container = document.getElementById('memoContainer');
-      container.innerHTML = '';
-      memos.forEach(m => {
-        container.innerHTML += `
-          <div class="col">
-            <div class="card p-3 h-100 bg-light border-start border-success border-3">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="badge bg-success small">${m.author}</span>
-                <small class="text-muted">${m.time}</small>
-              </div>
-              <p class="card-text small text-dark flex-grow-1">${m.text}</p>
-              <div class="text-end">
-                <button class="btn btn-link text-muted btn-sm p-0 m-0" onclick="deleteMemoItem('${m.id}')"><i class="fas fa-times me-1"></i>刪除</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
+        function handleAddSheetChange() {
+            const sheetName = document.getElementById('addSheet').value; const locSelect = document.getElementById('addLocation'); const hint = document.getElementById('addLocHint');
+            if (!sheetName) { locSelect.innerHTML = '<option value="">- 未標示 -</option>'; hint.innerText = '請先選擇分類'; return; }
+            let locs = locationsMap[sheetName] || [];
+            locSelect.innerHTML = '<option value="">- 未標示 -</option>' + locs.map(l => `<option value="${l}">${l}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新位置...</option>`;
+            hint.innerText = `${sheetName} 目前可選 ${locs.length} 個位置`;
+        }
 
-    function addNewMemo() {
-      const text = document.getElementById('memoText').value.trim();
-      const author = document.getElementById('memoAuthor').value;
-      if(!text) return;
-      apiCall('addMemo', { text: text, author: author }).then(memos => {
-        document.getElementById('memoText').value = '';
-        renderMemos(memos);
-      });
-    }
+        function addNewSheetOption() {
+            const input = document.getElementById('newSheetName'); const newName = input.value.trim(); if(!newName) return;
+            const sheetSelect = document.getElementById('addSheet'); let exists = Array.from(sheetSelect.options).some(opt => opt.value === newName);
+            if(!exists) { let opt = document.createElement('option'); opt.value = newName; opt.text = newName; sheetSelect.add(opt); locationsMap[newName] = []; }
+            sheetSelect.value = newName; input.value = ''; handleAddSheetChange(); 
+        }
 
-    function deleteMemoItem(id) {
-      apiCall('deleteMemo', { id: id }).then(memos => renderMemos(memos));
-    }
+        function submitNewChemical() {
+            const name = document.getElementById('addName').value.trim(); const sheet = document.getElementById('addSheet').value;
+            if(!name) return alert('「藥品名稱」為必填欄位！'); if(!sheet) return alert('「分類」為必填欄位！');
+            const btn = document.getElementById('addChemBtn'); btn.disabled = true; btn.innerText = "處理中...";
+            let locVal = document.getElementById('addLocation').value;
+            if(locVal === 'ADD_NEW') { locVal = prompt("請輸入新的位置名稱：") || ''; locVal = locVal.trim(); }
 
-    // 請購人員渲染
-    function renderBuyers(buyers) {
-      const group = document.getElementById('buyerListGroup');
-      const select = document.getElementById('memoAuthor');
-      group.innerHTML = '';
-      select.innerHTML = '<option value="實驗室成員">填寫人</option>';
-      buyers.forEach(b => {
-        group.innerHTML += `
-          <li class="list-group-item d-flex justify-content-between align-items-center py-2">
-            <span><i class="fas fa-user text-secondary me-2"></i>${b}</span>
-            <button class="btn btn-link text-danger p-0 btn-sm m-0" onclick="removeBuyerItem('${b}')"><i class="fas fa-user-minus"></i></button>
-          </li>
-        `;
-        select.innerHTML += `<option value="${b}">${b}</option>`;
-      });
-    }
+            const newRowData = { '藥品名稱': name, 'CAS NO.': document.getElementById('addCas').value.trim(), '濃度': document.getElementById('addConc').value.trim(), '規格': document.getElementById('addSpec').value.trim(), '廠商': document.getElementById('addVendor').value, '位置': locVal, '編號': document.getElementById('addNum').value.trim(), '使用狀態': document.getElementById('addStatus').value, 'GHS': document.getElementById('addGhs').checked ? '是' : '否' };
 
-    function addNewBuyer() {
-      const name = document.getElementById('newBuyerName').value.trim();
-      if(!name) return;
-      apiCall('addBuyer', { name: name }).then(buyers => {
-        document.getElementById('newBuyerName').value = '';
-        renderBuyers(buyers);
-      });
-    }
+            apiCall('addChemical', { sheetName: sheet, newRowData: newRowData }).then(success => {
+                btn.disabled = false; btn.innerText = "確認新增";
+                if(success) { addModalInstance.hide(); alert('✅ 藥品新增成功！'); forceRefresh(); } else { alert("新增失敗！"); }
+            }).catch(e => { btn.disabled = false; btn.innerText = "確認新增"; alert("連線異常！"); });
+        }
 
-    function removeBuyerItem(name) {
-      apiCall('removeBuyer', { name: name }).then(buyers => renderBuyers(buyers));
-    }
+        function formatStatus(s) { s = String(s || '').trim(); if (s === '1' || s === '1.0') return '100%'; if (s === '0') return '0%'; if (/^0\.[1-9]$/.test(s)) return (parseFloat(s)*100)+'%'; return s; }
 
-    function refreshSystemData() {
-      apiCall('forceRefreshData').then(raw => initSystem(JSON.parse(raw)));
-    }
+        function getBuyerSelectHtml(r) {
+            if (!r['_buyerColIndex'] || r['_buyerColIndex'] <= 0) return '-'; let curr = String(r['請購人'] || '').trim();
+            let optsHtml = `<option value="">- 選填 -</option>` + buyerList.map(b => `<option value="${b}" ${b===curr?'selected':''}>${b}</option>`).join('');
+            if (curr !== '' && !buyerList.includes(curr)) optsHtml += `<option value="${curr}" selected>${curr}</option>`;
+            optsHtml += `<option disabled>──────</option><option value="ADD_NEW">➕ 新增...</option><option value="DELETE_USER">❌ 刪除...</option>`;
+            return `<select class="buyer-dropdown buyer-dd-${r['_rowIndex']}" data-original="${curr}" onchange="handleBuyerAction(this, '${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r['_buyerColIndex']})">${optsHtml}</select>`;
+        }
 
-    // 對話視窗開關
-    function toggleChatBox() {
-      const box = document.getElementById('chat-box');
-      box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
-      if(box.style.display === 'flex') {
-        document.getElementById('chatInput').focus();
-        const body = document.getElementById('chatBody');
-        body.scrollTop = body.scrollHeight;
-      }
-    }
+        function getDateInputHtml(r, colName, colIndexKey, prefix) {
+            if (!r[colIndexKey] || r[colIndexKey] <= 0) return '-'; let val = String(r[colName] || '').trim(); let m = "", d = "";
+            if (val && val.includes('/')) { let parts = val.split('/'); m = parseInt(parts[0], 10).toString(); d = parseInt(parts[1], 10).toString(); }
+            let mOpts = `<option value="">月</option>` + Array.from({length:12}, (_,i)=>`<option value="${i+1}" ${m===String(i+1)?'selected':''}>${i+1}</option>`).join('');
+            let dOpts = `<option value="">日</option>` + Array.from({length:31}, (_,i)=>`<option value="${i+1}" ${d===String(i+1)?'selected':''}>${i+1}</option>`).join('');
+            return `<div style="display:flex;gap:2px;justify-content:center;"><select class="date-select ${prefix}-m-${r['_rowIndex']}" onchange="syncDateSelect('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${mOpts}</select><select class="date-select ${prefix}-d-${r['_rowIndex']}" onchange="syncDateSelect('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r[colIndexKey]}, '${colName}', '${prefix}')">${dOpts}</select></div>`;
+        }
 
-    function handleChatKeyPress(e) { if (e.key === 'Enter') sendChatMessage(); }
+        function generateRowsHtml(dataChunk) {
+            return dataChunk.map(r => {
+                try {
+                    const s = formatStatus(r['使用狀態']); let loc = []; for(let k in r) if(k.includes('位置') && r[k]) loc.push(String(r[k]).trim());
+                    let ghsVal = String(r['GHS'] || '').toLowerCase().trim(); let ghsBadge = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? '<span class="badge-soft badge-ghs-yes">有標籤</span>' : '<span class="badge-soft badge-ghs-no">無標籤</span>';
+                    let colorClass = ['10%','20%','0%'].includes(s) ? 'status-danger' : (s === '30%' ? 'status-warning' : (s === '40%' ? 'status-caution' : 'status-normal'));
+                    let selectHtml = `<select class="sheet-dropdown ${colorClass}" data-original="${s}" onchange="syncStatus(this,'${safeStr(r['來源分頁'])}',${r['_rowIndex']},${r['_statusColIndex']})">` + opts.map(o => `<option value="${o}" ${o===s?'selected':''}>${o}</option>`).join('') + `</select>`;
+                    let isOrdered = String(r['需訂購'] || '').toLowerCase() === 'true'; let orderHtml = r['_orderColIndex'] > 0 ? `<input type="checkbox" class="form-check-input order-checkbox order-chk-${r['_rowIndex']}" ${isOrdered ? 'checked' : ''} onchange="syncOrderCheck(this, '${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r['_orderColIndex']})">` : '-';
+                    
+                    let actionHtml = `<button class="action-btn edit-btn" title="編輯" onclick="openEditModal('${safeStr(r['來源分頁'])}', ${r['_rowIndex']})">${svgEdit}</button> <button class="action-btn delete-btn" title="刪除" onclick="confirmDelete('${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, '${safeStr(r['藥品名稱'])}')">${svgDelete}</button>`;
+                    return `<tr><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="藥品名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="濃度">${r['濃度']||'-'}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格/廠商" class="spec-cell"><div class="spec-vendor-container"><span class="spec-item">${r['規格']||'-'}</span><span class="vendor-item">${r['廠商']||'-'}</span></div></td><td data-label="位置"><span class="badge-soft badge-location">${r['位置']||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="使用狀態">${selectHtml}</td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購">${orderHtml}</td><td data-label="GHS">${ghsBadge}</td><td data-label="操作" style="white-space:nowrap;">${actionHtml}</td></tr>`;
+                } catch(e) {
+                    console.error("單列資料渲染異常", e); return '';
+                }
+            }).join('');
+        }
 
-    // 發送聊天訊息至後台路由
-    function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const msg = input.value.trim();
-      if (!msg) return;
+        function displayData(data) {
+            currentDisplayData = data; currentRenderCount = Math.min(RENDER_CHUNK, data.length);
+            document.getElementById('tableBody').innerHTML = generateRowsHtml(currentDisplayData.slice(0, currentRenderCount));
+        }
 
-      const body = document.getElementById('chatBody');
-      const uDiv = document.createElement('div');
-      uDiv.className = 'msg user';
-      uDiv.innerText = msg;
-      body.appendChild(uDiv);
-      input.value = '';
-      body.scrollTop = body.scrollHeight;
+        function openEditModal(sheetName, rowIndex) {
+            currentEditRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_rowIndex'] === rowIndex); if (!currentEditRow) return alert("找不到藥品資料！");
+            let casVal = '', concVal = '', specVal = '', venVal = '', locVal = '', numVal = '';
+            for(let key in currentEditRow) {
+                if(key.toUpperCase().includes('CAS')) casVal = currentEditRow[key]; else if(key.includes('濃度')) concVal = currentEditRow[key]; else if(key.includes('規格')) specVal = currentEditRow[key]; else if(key.includes('廠商') || key.includes('廠牌')) venVal = currentEditRow[key]; else if(key.includes('位置')) locVal = currentEditRow[key]; else if(key.includes('編號')) numVal = currentEditRow[key];
+            }
+            document.getElementById('editName').value = currentEditRow['藥品名稱'] || ''; document.getElementById('editSheet').value = currentEditRow['來源分頁'] || ''; document.getElementById('editCas').value = casVal; document.getElementById('editConc').value = concVal; document.getElementById('editSpec').value = specVal; document.getElementById('editNum').value = numVal;
+            const venSelect = document.getElementById('editVendor'); const locSelect = document.getElementById('editLocation');
+            let vVal = String(venVal).trim(); let lVal = String(locVal).trim();
+            venSelect.innerHTML = '<option value="">- 未標示 -</option>' + vendorList.map(v => `<option value="${v}">${v}</option>`).join('');
+            if(vVal && !vendorList.includes(vVal)) { let opt = document.createElement('option'); opt.value = vVal; opt.text = vVal; venSelect.add(opt, venSelect.options[1]); } venSelect.value = vVal;
+            let sheetLocs = locationsMap[sheetName] || []; locSelect.innerHTML = '<option value="">- 未標示 -</option>' + sheetLocs.map(l => `<option value="${l}">${l}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新位置...</option>`;
+            if(lVal && !sheetLocs.includes(lVal)) { let opt = document.createElement('option'); opt.value = lVal; opt.text = lVal; locSelect.add(opt, locSelect.options[1]); } locSelect.value = lVal;
+            document.getElementById('editStatus').value = formatStatus(currentEditRow['使用狀態']); let ghsVal = String(currentEditRow['GHS'] || '').toLowerCase(); document.getElementById('editGhs').value = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? 'true' : 'false';
+            editModalInstance.show();
+        }
 
-      const lDiv = document.createElement('div');
-      lDiv.className = 'msg bot text-muted';
-      lDiv.id = 'ai-loading';
-      lDiv.innerText = '🐕 正在思考推導中...';
-      body.appendChild(lDiv);
-      body.scrollTop = body.scrollHeight;
+        function saveEditData() {
+            if (!currentEditRow) return; const btn = document.getElementById('saveEditBtn'); btn.disabled = true; btn.innerText = "儲存中...";
+            let updateData = {}; const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+            const exactKey = (possibleNames) => { return Object.keys(currentEditRow).find(k => possibleNames.includes(k.replace(/\s+/g, ''))); };
 
-      apiCall('askGeminiAssistant', { userMessage: msg })
-      .then(reply => {
-        document.getElementById('ai-loading').remove();
-        const bDiv = document.createElement('div');
-        bDiv.className = 'msg bot';
-        bDiv.innerHTML = reply.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-        body.appendChild(bDiv);
-        body.scrollTop = body.scrollHeight;
-      })
-      .catch(err => {
-        document.getElementById('ai-loading').remove();
-        const eDiv = document.createElement('div');
-        eDiv.className = 'msg bot text-danger';
-        eDiv.innerText = '⚠️ 發生連線異常，請手動確認後台設定。';
-        body.appendChild(eDiv);
-        body.scrollTop = body.scrollHeight;
-      });
-    }
-  </script>
+            let kName = exactKey(['藥品名稱', '品名']); if(kName) updateData[kName] = getVal('editName');
+            let kCas = exactKey(['CASNO.', 'CASNO', 'CAS']); if(kCas) updateData[kCas] = getVal('editCas');
+            let kConc = exactKey(['濃度']); if(kConc) updateData[kConc] = getVal('editConc');
+            let kSpec = exactKey(['規格']); if(kSpec) updateData[kSpec] = getVal('editSpec');
+            let kVen = exactKey(['廠商', '廠牌']); if(kVen) updateData[kVen] = getVal('editVendor');
+            let kLoc = exactKey(['位置']); if(kLoc) updateData[kLoc] = getVal('editLocation');
+            let kNum = exactKey(['編號']); if(kNum) updateData[kNum] = getVal('editNum');
+            let kStatus = exactKey(['使用狀態', '狀態']); if(kStatus) updateData[kStatus] = getVal('editStatus');
+            let kGhs = exactKey(['GHS', 'GHS標籤']); if(kGhs) updateData[kGhs] = getVal('editGhs') === 'true' ? '是' : '否';
+
+            let finalUpdateData = {}; for(let key in updateData) { if(updateData[key].trim() !== String(currentEditRow[key] || '').trim()) { finalUpdateData[key] = updateData[key].trim(); } }
+            if (Object.keys(finalUpdateData).length === 0) { editModalInstance.hide(); btn.disabled = false; btn.innerText = "儲存修改"; return; }
+            apiCall('updateChemical', { sheetName: currentEditRow['來源分頁'], rowIndex: currentEditRow['_rowIndex'], updateData: finalUpdateData }).then(success => { btn.disabled = false; btn.innerText = "儲存修改"; if(success) { editModalInstance.hide(); forceRefresh(); } else { alert("儲存失敗！"); } }).catch(e => { btn.disabled = false; btn.innerText = "儲存修改"; alert("連線異常！"); });
+        }
+
+        function confirmDelete(sheetName, rowIndex, drugName) {
+            if (confirm(`🚨 警告：您確定要將【 ${drugName} 】從資料庫中永久刪除嗎？\n(刪除後無法復原)`)) {
+                document.getElementById('searchInput').placeholder = "🗑️ 正在從雲端刪除資料...";
+                apiCall('deleteChemical', { sheetName: sheetName, rowIndex: rowIndex }).then(success => { if(success) forceRefresh(); else alert("刪除失敗！"); }).catch(e => alert("連線異常！"));
+            }
+        }
+
+        // 🌟 防呆搜尋核心邏輯
+        document.getElementById('searchInput').oninput = function() {
+            clearTimeout(searchTimeout); 
+            const originalTerm = this.value.trim(); 
+            updateUIVisibility(originalTerm); 
+            
+            searchTimeout = setTimeout(() => { 
+                if(!originalTerm) return displayData(chemicalData); 
+                
+                const term = originalTerm.toLowerCase().replace(/[\s\-]/g, '');
+
+                const filtered = chemicalData.filter(r => { 
+                    const rawName = String(r['藥品名稱'] || ''); 
+                    const rawCas = String(r['CAS  NO.'] || r['CAS NO.'] || ''); 
+                    const cleanName = rawName.toLowerCase().replace(/[\s\-]/g, '');
+                    const cleanCas = rawCas.toLowerCase().replace(/[\s\-]/g, '');
+
+                    if (cleanName.includes(term) || cleanCas.includes(term)) return true;
+                    const isFuzzyMatch = originalTerm.length > 4 && rawName.toLowerCase().split(/[\s\-]+/).some(w => levenshtein(originalTerm.toLowerCase(), w) <= 2);
+                    return isFuzzyMatch;
+                });
+                
+                displayData(filtered); 
+            }, 250); 
+        };
+
+        function updateUIVisibility(searchVal) { const buyListContainer = document.getElementById('buyListContainer'); const memoSection = document.getElementById('memoSection'); if (searchVal !== "") { memoSection.style.display = 'none'; buyListContainer.style.display = 'none'; } else { memoSection.style.display = 'block'; const hasToBuy = chemicalData.some(r => String(r['需訂購'] || '').toLowerCase() === 'true'); buyListContainer.style.display = hasToBuy ? 'block' : 'none'; } }
+        function updateBuyList() { 
+            const body = document.getElementById('buyListBody'); const toBuy = chemicalData.filter(r => String(r['需訂購'] || '').toLowerCase() === 'true'); 
+            body.innerHTML = toBuy.map(r => { 
+                try {
+                    let loc = []; for(let k in r) if(k.includes('位置') && r[k]) loc.push(String(r[k]).trim()); let s = formatStatus(r['使用狀態']); let colorClass = ['10%','20%','0%'].includes(s) ? 'status-danger' : (s === '30%' ? 'status-warning' : (s === '40%' ? 'status-caution' : 'status-normal')); 
+                    return `<tr><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格" class="spec-cell">${r['規格']||'-'}</td><td data-label="位置"><span class="badge-soft badge-location">${loc.join('-')||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="狀態"><span class="badge-soft ${colorClass}">${s}</span></td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購"><input type="checkbox" class="form-check-input order-checkbox" checked onchange="syncOrderCheck(this, '${safeStr(r['來源分頁'])}', ${r['_rowIndex']}, ${r['_orderColIndex']})"></td></tr>`; 
+                } catch(e) { return ''; }
+            }).join(''); 
+            updateUIVisibility(document.getElementById('searchInput').value.trim()); 
+        }
+
+        function renderMemos() { const container = document.getElementById('memoListContainer'); if (memoList.length === 0) { container.innerHTML = '<div class="text-center text-muted" style="font-size:0.85rem;">目前沒有備忘錄。</div>'; return; } container.innerHTML = memoList.map(m => { const authorTag = m.author ? `<span class="memo-author-badge">${m.author}</span>` : ''; return `<div class="memo-item"><div class="memo-text">${authorTag}${m.text}</div><div class="memo-meta"><span>${m.time}</span><button class="memo-delete" onclick="deleteMemo('${m.id}')">✖</button></div></div>`; }).join(''); }
+        function addNewMemo() { const input = document.getElementById('memoInput'); const authorSelect = document.getElementById('memoAuthorSelect'); const textVal = input.value.trim(); const authorVal = authorSelect.value; if (!authorVal) { alert("⚠️ 請先選擇「留言者」！"); authorSelect.focus(); return; } if (!textVal) return; apiCall('addMemo', {text: textVal, author: authorVal}).then(updated => { input.value = ''; memoList = updated; saveToLocal(); renderMemos(); }); }
+        function deleteMemo(id) { if (confirm('確定刪除這則備忘錄嗎？')) { apiCall('deleteMemo', {id: id}).then(updated => { memoList = updated; saveToLocal(); renderMemos(); }); } }
+        function syncStatus(el, sheet, row, col) { const val = el.value; const origVal = el.getAttribute('data-original'); el.disabled = true; let target = chemicalData.find(r => r['來源分頁']===sheet && r['_rowIndex']===row); if(target) { target['使用狀態'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheet, rowIndex: row, colIndex: col, newValue: val}).then(s => { el.disabled = false; if (!s) { el.value = origVal; if(target){ target['使用狀態']=origVal; saveToLocal();} alert("寫入失敗！"); return; } el.setAttribute('data-original', val); el.className = `sheet-dropdown ${['10%','20%','0%'].includes(val)?'status-danger':(val==='30%'?'status-warning':(val==='40%'?'status-caution':'status-normal'))}`; updateBuyList(); }).catch(() => { el.disabled = false; el.value = origVal; if(target) { target['使用狀態'] = origVal; saveToLocal(); } alert("連線異常！"); }); }
+        function handleBuyerAction(selectElem, sheetName, rowIndex, colIndex, isMemo = false) { const val = selectElem.value; const originalVal = selectElem.getAttribute('data-original'); if (val === 'ADD_NEW' || val === 'DELETE_USER') { let actionStr = val === 'ADD_NEW' ? '新增' : '刪除'; let name = prompt(`請輸入要「${actionStr}」的人員名稱：`); if (name && name.trim() !== '') { const targetName = name.trim(); selectElem.disabled = true; if (val === 'ADD_NEW') { apiCall('addBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); if(isMemo) document.getElementById('memoAuthorSelect').value = targetName; selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } else { apiCall('removeBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; chemicalData.forEach(r => { if(String(r['請購人']) === targetName) r['請購人'] = ''; }); saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); alert(`已刪除人員「${targetName}」。`); selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } } else { selectElem.value = originalVal||''; } } else if(!isMemo) { selectElem.disabled = true; let targetRow = chemicalData.find(x => x['來源分頁']===sheetName && x['_rowIndex']===rowIndex); if(targetRow) { targetRow['請購人'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, rowIndex: rowIndex, colIndex: colIndex, newValue: val}).then(() => { selectElem.disabled = false; selectElem.setAttribute('data-original', val); updateBuyList(); }); } }
+        function syncDateSelect(sheetName, rowIndex, colIndex, colName, prefix) { let mVal = document.querySelector(`.${prefix}-m-${rowIndex}`).value; let dVal = document.querySelector(`.${prefix}-d-${rowIndex}`).value; let val = (mVal && dVal) ? `${mVal.padStart(2, '0')}/${dVal.padStart(2, '0')}` : ""; if (!mVal && !dVal) val = ""; else if (!mVal || !dVal) return; let r = chemicalData.find(x => x['來源分頁'] === sheetName && x['_rowIndex'] === rowIndex); if(r) { r[colName] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, rowIndex: rowIndex, colIndex: colIndex, newValue: val}).then(() => { updateBuyList(); }); }
+        function syncOrderCheck(checkboxElem, sheetName, rowIndex, colIndex) { const isChecked = checkboxElem.checked; checkboxElem.disabled = true; let targetRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_rowIndex'] === rowIndex); if (targetRow) { targetRow['需訂購'] = isChecked ? 'true' : 'false'; if (!isChecked) { targetRow['請購人'] = ''; targetRow['請購日'] = ''; targetRow['訂購日'] = ''; } saveToLocal(); } const colMap = { order: targetRow['_orderColIndex'], buyer: targetRow['_buyerColIndex'], reqDate: targetRow['_reqDateColIndex'], orderDate: targetRow['_orderDateColIndex'] }; apiCall('toggleNeedToOrder', {sheetName: sheetName, rowIndex: rowIndex, isChecked: isChecked, colMap: colMap}).then(success => { checkboxElem.disabled = false; if (success) { const term = document.getElementById('searchInput').value.toLowerCase().trim(); if (!term) displayData(chemicalData); else displayData(chemicalData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term)))); updateBuyList(); } }).catch(err => { checkboxElem.disabled = false; checkboxElem.checked = !isChecked; alert("連線失敗！"); }); }
+        function toggleChat() { const box = document.getElementById('ai-chat-box'); if (box.style.display === 'flex') box.style.display = 'none'; else { box.style.display = 'flex'; document.getElementById('ai-chat-input').focus(); } }
+        function formatBotMessage(text) { return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
+        function sendChatMessage() { const input = document.getElementById('ai-chat-input'); const msg = input.value.trim(); if (!msg) return; appendMessage('user', msg); input.value = ''; input.disabled = true; const typingId = appendMessage('bot', '...', true); apiCall('askGeminiAssistant', {userMessage: msg}).then(response => { document.getElementById(typingId).remove(); appendMessage('bot', formatBotMessage(response)); input.disabled = false; input.focus(); }).catch(err => { document.getElementById(typingId).remove(); appendMessage('bot', '⚠️ 抱歉，連線發生異常。'); input.disabled = false; input.focus(); }); }
+        function appendMessage(sender, text, isTyping = false) { const msgs = document.getElementById('ai-chat-messages'); const div = document.createElement('div'); div.className = `chat-msg ${sender}`; if (isTyping) div.id = 'typing-' + Date.now(); if (sender === 'user') div.innerText = text; else div.innerHTML = text; msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; return div.id; }
+    </script>
 </body>
 </html>
