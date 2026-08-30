@@ -650,7 +650,50 @@
         function syncStatus(el, sheet, uuid, col) { const val = el.value; const origVal = el.getAttribute('data-original'); el.disabled = true; let target = chemicalData.find(r => r['來源分頁']===sheet && r['_UUID']===uuid); if(target) { target['使用狀態'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheet, uuid: uuid, colIndex: col, newValue: val}).then(s => { el.disabled = false; if (!s) { el.value = origVal; if(target){ target['使用狀態']=origVal; saveToLocal();} alert("寫入失敗！"); return; } el.setAttribute('data-original', val); el.className = `sheet-dropdown ${['10%','20%','0%'].includes(val)?'status-danger':(val==='30%'?'status-warning':(val==='40%'?'status-caution':'status-normal'))}`; updateBuyList(); }).catch(() => { el.disabled = false; el.value = origVal; if(target) { target['使用狀態'] = origVal; saveToLocal(); } alert("連線異常！"); }); }
         function handleBuyerAction(selectElem, sheetName, uuid, colIndex, isMemo = false) { const val = selectElem.value; const originalVal = selectElem.getAttribute('data-original'); if (val === 'ADD_NEW' || val === 'DELETE_USER') { let actionStr = val === 'ADD_NEW' ? '新增' : '刪除'; let name = prompt(`請輸入要「${actionStr}」的人員名稱：`); if (name && name.trim() !== '') { const targetName = name.trim(); selectElem.disabled = true; if (val === 'ADD_NEW') { apiCall('addBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); if(isMemo) document.getElementById('memoAuthorSelect').value = targetName; selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } else { apiCall('removeBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; chemicalData.forEach(r => { if(String(r['請購人']) === targetName) r['請購人'] = ''; }); saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); alert(`已刪除人員「${targetName}」。`); selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } } else { selectElem.value = originalVal||''; } } else if(!isMemo) { selectElem.disabled = true; let targetRow = chemicalData.find(x => x['來源分頁']===sheetName && x['_UUID']===uuid); if(targetRow) { targetRow['請購人'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { selectElem.disabled = false; selectElem.setAttribute('data-original', val); updateBuyList(); }); } }
         function syncDateSelect(sheetName, uuid, colIndex, colName, prefix) { let mVal = document.querySelector(`.${prefix}-m-${uuid}`).value; let dVal = document.querySelector(`.${prefix}-d-${uuid}`).value; let val = (mVal && dVal) ? `${mVal.padStart(2, '0')}/${dVal.padStart(2, '0')}` : ""; if (!mVal && !dVal) val = ""; else if (!mVal || !dVal) return; let r = chemicalData.find(x => x['來源分頁'] === sheetName && x['_UUID'] === uuid); if(r) { r[colName] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { updateBuyList(); }); }
-        function syncOrderCheck(checkboxElem, sheetName, uuid, colIndex) { const isChecked = checkboxElem.checked; checkboxElem.disabled = true; let targetRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_UUID'] === uuid); if (targetRow) { targetRow['需訂購'] = isChecked ? 'true' : 'false'; if (!isChecked) { targetRow['請購人'] = ''; targetRow['請購日'] = ''; targetRow['訂購日'] = ''; } saveToLocal(); } const colMap = { order: targetRow['_orderColIndex'], buyer: targetRow['_buyerColIndex'], reqDate: targetRow['_reqDateColIndex'], orderDate: targetRow['_orderDateColIndex'] }; apiCall('toggleNeedToOrder', {sheetName: sheetName, uuid: uuid, isChecked: isChecked, colMap: colMap}).then(success => { checkboxElem.disabled = false; if (success) { const term = document.getElementById('searchInput').value.toLowerCase().trim(); if (!term) displayData(chemicalData); else displayData(chemicalData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term)))); updateBuyList(); } }).catch(err => { checkboxElem.disabled = false; checkboxElem.checked = !isChecked; alert("連線失敗！"); }); }
+        
+        // 🌟 更新：需訂購按鈕的檢核與連動邏輯
+        function syncOrderCheck(checkboxElem, sheetName, uuid, colIndex) { 
+            let targetRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_UUID'] === uuid);
+            const isChecked = checkboxElem.checked; 
+
+            // 1. 若要打勾，檢查是否填妥請購人與請購日
+            if (isChecked && targetRow) {
+                let buyer = String(targetRow['請購人'] || '').trim();
+                let reqDate = String(targetRow['請購日'] || '').trim();
+                
+                if (!buyer || !reqDate) {
+                    alert("⚠️ 請先填寫「請購人」與「請購日」，才能勾選需訂購！");
+                    checkboxElem.checked = false; 
+                    return; 
+                }
+            }
+
+            // 2. 通過檢核，執行更新
+            checkboxElem.disabled = true; 
+            if (targetRow) { 
+                targetRow['需訂購'] = isChecked ? 'true' : 'false'; 
+                if (!isChecked) { 
+                    targetRow['請購人'] = ''; 
+                    targetRow['請購日'] = ''; 
+                    targetRow['訂購日'] = ''; 
+                } 
+                saveToLocal(); 
+            } 
+            const colMap = { order: targetRow['_orderColIndex'], buyer: targetRow['_buyerColIndex'], reqDate: targetRow['_reqDateColIndex'], orderDate: targetRow['_orderDateColIndex'] }; 
+            apiCall('toggleNeedToOrder', {sheetName: sheetName, uuid: uuid, isChecked: isChecked, colMap: colMap}).then(success => { 
+                checkboxElem.disabled = false; 
+                if (success) { 
+                    const term = document.getElementById('searchInput').value.toLowerCase().trim(); 
+                    if (!term) displayData(chemicalData); 
+                    else displayData(chemicalData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term)))); 
+                    updateBuyList(); 
+                } 
+            }).catch(err => { 
+                checkboxElem.disabled = false; 
+                checkboxElem.checked = !isChecked; 
+                alert("連線失敗！"); 
+            }); 
+        }
     </script>
 </body>
 </html>
