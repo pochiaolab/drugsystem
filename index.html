@@ -75,7 +75,7 @@
             .top-search-title { font-size: 1.3rem; text-align: left; padding-right: 0; margin-bottom: 8px; } 
             
             .top-search-area .d-flex { flex-direction: column; gap: 8px !important; }
-            #openAddBtn { width: 100%; padding: 10px; }
+            #openAddBtn, #auditModeBtn { width: 100%; padding: 10px; }
 
             .memo-input-group { flex-direction: column; gap: 8px; }
             .memo-input, .memo-author-select, .memo-btn { width: 100%; margin: 0; }
@@ -96,6 +96,9 @@
             .spec-item { grid-column: 1; text-align: center; padding-left: 10px; display: block; }
             .vendor-item { grid-column: 2; text-align: right; display: block; margin-top: 0; }
         }
+
+        #auditBanner { display:none; background-color: #fef08a; padding: 12px 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #fde047; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        @media (max-width: 768px) { #auditBanner { flex-direction: column; gap: 10px; align-items: flex-start !important; } #auditBanner .controls { width: 100%; justify-content: space-between; } }
     </style>
 </head>
 <body>
@@ -111,8 +114,19 @@
                     <div class="d-flex gap-2">
                         <input type="text" id="searchInput" class="form-control search-input" placeholder="秒速載入中..." disabled>
                         <button id="openAddBtn" class="btn text-white shadow-sm" style="background-color: #4338ca; font-weight: 700; border-radius: 12px; white-space: nowrap; padding: 0 20px; transition: 0.2s;" onclick="openAddModal()" disabled>＋ 新增藥品</button>
+                        <!-- 🌟 新增盤點按鈕 -->
+                        <button id="auditModeBtn" class="btn text-white shadow-sm" style="background-color: #16a34a; font-weight: 700; border-radius: 12px; white-space: nowrap; padding: 0 15px; transition: 0.2s;" onclick="toggleAuditMode()" disabled>📦 盤點</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 🌟 盤點模式專用橫幅 -->
+        <div id="auditBanner" style="display:flex; align-items: center; justify-content: space-between;">
+            <div>📦 <strong style="font-size: 1.1rem; color: #854d0e;">盤點模式啟動中</strong> <span style="font-size:0.95rem; color:#a16207; margin-left: 5px;">(清點人: <span id="auditBannerName" style="font-weight:bold;"></span>)</span></div>
+            <div class="controls" style="display:flex; gap:15px; align-items:center;">
+                <label style="cursor:pointer; font-weight:bold; color:#854d0e;"><input type="checkbox" id="auditHideToggle" onchange="auditModeInfo.hideAudited = this.checked; displayData(chemicalData);" style="transform: scale(1.2); margin-right: 5px; accent-color: #ca8a04;"> 隱藏今日已點</label>
+                <button class="btn btn-sm text-white" style="background-color: #dc2626; font-weight: bold; border-radius: 8px;" onclick="toggleAuditMode()">退出盤點</button>
             </div>
         </div>
 
@@ -303,6 +317,14 @@
         const RENDER_CHUNK = 50;
         let isRendering = false;
 
+        // 🌟 盤點模式狀態變數
+        let auditModeInfo = null;
+
+        function getTodayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+        }
+
         function safeStr(str) { return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         function sortChemicalData(data) {
@@ -370,6 +392,7 @@
                 const searchInput = document.getElementById('searchInput'); searchInput.disabled = false; 
                 searchInput.placeholder = `🔍 搜尋 ${chemicalData.length} 筆資料...`;
                 document.getElementById('openAddBtn').disabled = false;
+                document.getElementById('auditModeBtn').disabled = false;
                 renderDropdowns(); renderAddFormDropdowns(); renderMemos(); updateBuyList(); displayData(chemicalData);
             } catch (err) { console.error("初始化失敗", err); }
         }
@@ -386,6 +409,54 @@
                 setTimeout(() => { isRendering = false; }, 100);
             }
         });
+
+        // 🌟 盤點模式開關
+        function toggleAuditMode() {
+            if (auditModeInfo) {
+                auditModeInfo = null; 
+                document.getElementById('auditBanner').style.display = 'none';
+                displayData(chemicalData);
+            } else {
+                const name = prompt("請輸入您的姓名 (將記錄在『清點人』欄位)：");
+                if (name && name.trim()) {
+                    auditModeInfo = { auditor: name.trim(), hideAudited: document.getElementById('auditHideToggle').checked };
+                    document.getElementById('auditBanner').style.display = 'flex';
+                    document.getElementById('auditBannerName').innerText = name.trim();
+                    displayData(chemicalData);
+                }
+            }
+        }
+
+        // 🌟 執行點收功能
+        function markAudited(btnElem, sheetName, uuid) {
+            btnElem.disabled = true;
+            btnElem.innerText = "⏳...";
+            apiCall('auditChemical', {sheetName: sheetName, uuid: uuid, auditor: auditModeInfo.auditor}).then(res => {
+                if(res) {
+                    let targetRow = chemicalData.find(x => x['來源分頁']===sheetName && x['_UUID']===uuid);
+                    if(targetRow) {
+                        targetRow['最後清點日'] = res.date;
+                        targetRow['清點人'] = res.auditor;
+                        saveToLocal();
+                    }
+                    if (auditModeInfo.hideAudited) {
+                        displayData(currentDisplayData);
+                    } else {
+                        btnElem.outerHTML = `<span style="color:#16a34a; font-weight:bold;">✅ 已點</span>`;
+                        let tr = document.getElementById(`row-${uuid}`);
+                        if(tr) { tr.style.opacity = '0.5'; tr.style.backgroundColor = '#f8fafc'; }
+                    }
+                } else {
+                    alert("點收失敗！");
+                    btnElem.disabled = false;
+                    btnElem.innerText = "✅ 點收";
+                }
+            }).catch(e => {
+                alert("連線異常");
+                btnElem.disabled = false;
+                btnElem.innerText = "✅ 點收";
+            });
+        }
 
         function openAddModal() {
             document.getElementById('addName').value = ''; 
@@ -538,16 +609,36 @@
         }
 
         function generateRowsHtml(dataChunk) {
+            const todayStr = getTodayStr();
+
             return dataChunk.map(r => {
                 try {
+                    // 🌟 盤點模式視覺判定
+                    let auditedDate = String(r['最後清點日'] || '').trim();
+                    let isAuditedToday = auditedDate.includes(todayStr);
+                    
+                    if (auditModeInfo && auditModeInfo.hideAudited && isAuditedToday) return ''; 
+
+                    let rowStyle = (auditModeInfo && isAuditedToday) ? 'opacity: 0.5; background-color: #f8fafc;' : '';
+
                     const s = formatStatus(r['使用狀態']); let loc = []; for(let k in r) if(k.includes('位置') && r[k]) loc.push(String(r[k]).trim());
                     let ghsVal = String(r['GHS'] || '').toLowerCase().trim(); let ghsBadge = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? '<span class="badge-soft badge-ghs-yes">有標籤</span>' : '<span class="badge-soft badge-ghs-no">無標籤</span>';
                     let colorClass = ['10%','20%','0%'].includes(s) ? 'status-danger' : (s === '30%' ? 'status-warning' : (s === '40%' ? 'status-caution' : 'status-normal'));
                     let selectHtml = `<select class="sheet-dropdown ${colorClass}" data-original="${s}" onchange="syncStatus(this,'${safeStr(r['來源分頁'])}','${r._UUID}',${r['_statusColIndex']})">` + opts.map(o => `<option value="${o}" ${o===s?'selected':''}>${o}</option>`).join('') + `</select>`;
                     let isOrdered = String(r['需訂購'] || '').toLowerCase() === 'true'; let orderHtml = r['_orderColIndex'] > 0 ? `<input type="checkbox" class="form-check-input order-checkbox order-chk-${r._UUID}" ${isOrdered ? 'checked' : ''} onchange="syncOrderCheck(this, '${safeStr(r['來源分頁'])}', '${r._UUID}', ${r['_orderColIndex']})">` : '-';
                     
-                    let actionHtml = `<button class="action-btn edit-btn" title="編輯" onclick="openEditModal('${safeStr(r['來源分頁'])}', '${r._UUID}')">${svgEdit}</button> <button class="action-btn delete-btn" title="刪除" onclick="confirmDelete('${safeStr(r['來源分頁'])}', '${r._UUID}', '${safeStr(r['藥品名稱'])}')">${svgDelete}</button>`;
-                    return `<tr><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="藥品名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="濃度">${r['濃度']||'-'}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格/廠商" class="spec-cell"><div class="spec-vendor-container"><span class="spec-item">${r['規格']||'-'}</span><span class="vendor-item">${r['廠商']||'-'}</span></div></td><td data-label="位置"><span class="badge-soft badge-location">${r['位置']||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="使用狀態">${selectHtml}</td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購">${orderHtml}</td><td data-label="GHS">${ghsBadge}</td><td data-label="操作" style="white-space:nowrap;">${actionHtml}</td></tr>`;
+                    let actionHtml = '';
+                    if (auditModeInfo) {
+                        if (isAuditedToday) {
+                            actionHtml = `<span style="color:#16a34a; font-weight:bold;">✅ 已點</span>`;
+                        } else {
+                            actionHtml = `<button class="btn btn-sm text-white shadow-sm" style="background-color:#16a34a; white-space:nowrap; font-weight:bold; border-radius:6px;" onclick="markAudited(this, '${safeStr(r['來源分頁'])}', '${r._UUID}')">✅ 點收</button>`;
+                        }
+                    } else {
+                        actionHtml = `<button class="action-btn edit-btn" title="編輯" onclick="openEditModal('${safeStr(r['來源分頁'])}', '${r._UUID}')">${svgEdit}</button> <button class="action-btn delete-btn" title="刪除" onclick="confirmDelete('${safeStr(r['來源分頁'])}', '${r._UUID}', '${safeStr(r['藥品名稱'])}')">${svgDelete}</button>`;
+                    }
+
+                    return `<tr id="row-${r._UUID}" style="${rowStyle}"><td data-label="藥櫃" class="sheet-cell"><span class="badge-soft badge-sheet">${r['來源分頁']}</span></td><td data-label="藥品名稱" class="name-cell">${r['藥品名稱']}</td><td data-label="濃度">${r['濃度']||'-'}</td><td data-label="CAS NO.">${r['CAS  NO.']||r['CAS NO.']||'-'}</td><td data-label="規格/廠商" class="spec-cell"><div class="spec-vendor-container"><span class="spec-item">${r['規格']||'-'}</span><span class="vendor-item">${r['廠商']||'-'}</span></div></td><td data-label="位置"><span class="badge-soft badge-location">${r['位置']||'-'}</span></td><td data-label="編號"><span class="badge-num">${r['編號']||'-'}</span></td><td data-label="使用狀態">${selectHtml}</td><td data-label="請購人">${getBuyerSelectHtml(r)}</td><td data-label="請購日">${getDateInputHtml(r, '請購日', '_reqDateColIndex', 'req-date')}</td><td data-label="訂購日">${getDateInputHtml(r, '訂購日', '_orderDateColIndex', 'order-date')}</td><td data-label="需訂購">${orderHtml}</td><td data-label="GHS">${ghsBadge}</td><td data-label="操作" style="white-space:nowrap;">${actionHtml}</td></tr>`;
                 } catch(e) {
                     console.error("單列資料渲染異常", e); return '';
                 }
