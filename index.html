@@ -194,9 +194,10 @@
                                 <button class="btn btn-outline-secondary" type="button" onclick="addNewSheetOption()" style="background: white; border-left: none; border-color: #cbd5e1; font-weight: bold; color: #475569;">＋ 加入</button>
                             </div>
                         </div>
+                        <!-- 🌟 位置選單：加入 onchange 觸發器 -->
                         <div class="col-md-6">
                             <label class="add-form-label">位置 <small style="color: #94a3b8; font-weight: normal;">跟隨分類</small></label>
-                            <select id="addLocation" class="form-select add-form-input">
+                            <select id="addLocation" class="form-select add-form-input" onchange="handleCustomSelect(this, '請輸入新的位置名稱：')">
                                 <option value="">- 未標示 -</option>
                             </select>
                             <div id="addLocHint" style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">請先選擇分類</div>
@@ -223,10 +224,10 @@
                                 <option value="">未填</option><option value="100%">100%</option><option value="90%">90%</option><option value="80%">80%</option><option value="70%">70%</option><option value="60%">60%</option><option value="50%">50%</option><option value="40%">40%</option><option value="30%">30%</option><option value="20%">20%</option><option value="10%">10%</option><option value="0%">0%</option>
                             </select>
                         </div>
-                        <!-- 🌟 已經將編號改為跟隨分類的下拉選單 -->
+                        <!-- 🌟 編號選單：加入 onchange 觸發器 -->
                         <div class="col-md-6">
                             <label class="add-form-label">編號 <small style="color: #94a3b8; font-weight: normal;">跟隨分類</small></label>
-                            <select id="addNum" class="form-select add-form-input">
+                            <select id="addNum" class="form-select add-form-input" onchange="handleCustomSelect(this, '請輸入新的編號：')">
                                 <option value="">- 請先選擇分類 -</option>
                             </select>
                         </div>
@@ -435,7 +436,6 @@
             addModalInstance.show();
         }
 
-        // 🌟 更新包含詳細錯誤訊息的 forceRefresh
         function forceRefresh() {
             const btn = document.getElementById('refreshBtn'); const searchInput = document.getElementById('searchInput');
             if (btn.classList.contains('spinning')) return; btn.classList.add('spinning'); searchInput.disabled = true; searchInput.placeholder = "🔄 同步最新資料中...";
@@ -450,7 +450,7 @@
             }).catch(err => { 
                 btn.classList.remove('spinning'); 
                 searchInput.disabled = false; 
-                alert("更新失敗，詳細原因：" + err.message + "\\n\\n(提示：請確認網路狀態，或徹底刪除試算表底部的空白列)"); 
+                alert("更新失敗，詳細原因：" + err.message + "\n\n(提示：請確認網路狀態，或徹底刪除試算表底部的空白列)"); 
             });
         }
 
@@ -507,16 +507,33 @@
             sheetSelect.value = newName; input.value = ''; handleAddSheetChange(); 
         }
 
+        // 🌟 新增：處理下拉選單選擇「自訂選項」的即時彈窗邏輯
+        function handleCustomSelect(selectElem, promptMsg) {
+            if (selectElem.value === 'ADD_NEW') {
+                let newVal = prompt(promptMsg);
+                if (newVal !== null && newVal.trim() !== '') {
+                    newVal = newVal.trim();
+                    let exists = Array.from(selectElem.options).some(opt => opt.value === newVal);
+                    if (!exists) {
+                        let opt = document.createElement('option');
+                        opt.value = newVal;
+                        opt.text = newVal;
+                        selectElem.add(opt, selectElem.options[1]); 
+                    }
+                    selectElem.value = newVal;
+                } else {
+                    selectElem.value = '';
+                }
+            }
+        }
+
+        // 🌟 更新：送出資料函數
         function submitNewChemical() {
             const name = document.getElementById('addName').value.trim(); const sheet = document.getElementById('addSheet').value;
             if(!name) return alert('「藥品名稱」為必填欄位！'); if(!sheet) return alert('「分類」為必填欄位！');
-            const btn = document.getElementById('addChemBtn'); btn.disabled = true; btn.innerText = "處理中...";
             
-            let locVal = document.getElementById('addLocation').value;
-            if(locVal === 'ADD_NEW') { locVal = prompt("請輸入新的位置名稱：") || ''; locVal = locVal.trim(); }
-            
-            let numVal = document.getElementById('addNum').value;
-            if(numVal === 'ADD_NEW') { numVal = prompt("請輸入新的編號：") || ''; numVal = numVal.trim(); }
+            const btn = document.getElementById('addChemBtn'); 
+            btn.disabled = true; btn.innerText = "處理中...";
 
             const newRowData = { 
                 '藥品名稱': name, 
@@ -524,8 +541,8 @@
                 '濃度': document.getElementById('addConc').value.trim(), 
                 '規格': document.getElementById('addSpec').value.trim(), 
                 '廠商': document.getElementById('addVendor').value, 
-                '位置': locVal, 
-                '編號': numVal, 
+                '位置': document.getElementById('addLocation').value, 
+                '編號': document.getElementById('addNum').value,      
                 '使用狀態': document.getElementById('addStatus').value, 
                 'GHS': document.getElementById('addGhs').checked ? '是' : '否' 
             };
