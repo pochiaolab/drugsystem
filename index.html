@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🧪 LPC lab 藥品系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { background-color: #f5f7f9; font-family: -apple-system, sans-serif; padding-top: 15px; color: #334155; }
         .main-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 0 10px; padding-bottom: 40px; }
@@ -97,30 +96,6 @@
             .spec-item { grid-column: 1; text-align: center; padding-left: 10px; display: block; }
             .vendor-item { grid-column: 2; text-align: right; display: block; margin-top: 0; }
         }
-
-        #ai-chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: -apple-system, sans-serif; }
-        #ai-chat-btn { width: 60px; height: 60px; border-radius: 50%; background-color: #4338ca; color: white; font-size: 28px; border: none; box-shadow: 0 4px 15px rgba(67, 56, 202, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
-        #ai-chat-btn:hover { transform: scale(1.1); }
-        #ai-chat-box { position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; border: 1px solid #e2e8f0; overflow: hidden; }
-        #ai-chat-header { background: #4338ca; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        #ai-chat-close { cursor: pointer; font-size: 1.2rem; }
-        #ai-chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
-        .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.6; word-wrap: break-word;}
-        .chat-msg.user { align-self: flex-end; background: #4338ca; color: white; border-bottom-right-radius: 2px; }
-        
-        /* 🌟 Markdown 排版樣式 */
-        .chat-msg.bot { align-self: flex-start; background: #e2e8f0; color: #1e293b; border-bottom-left-radius: 2px; }
-        .chat-msg.bot strong { font-weight: 800; color: #000; }
-        .chat-msg.bot p { margin-bottom: 8px; }
-        .chat-msg.bot p:last-child { margin-bottom: 0; }
-        .chat-msg.bot ul, .chat-msg.bot ol { padding-left: 22px; margin-bottom: 8px; margin-top: 4px; }
-        .chat-msg.bot li { margin-bottom: 4px; }
-        .chat-msg.bot code { background: #cbd5e1; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; color: #b91c1c; }
-        
-        #ai-chat-input-area { display: flex; padding: 12px; border-top: 1px solid #e2e8f0; background: white; gap: 8px; }
-        #ai-chat-input { flex-grow: 1; border: 1px solid #cbd5e1; border-radius: 20px; padding: 8px 15px; outline: none; font-size: 0.95rem; }
-        #ai-chat-send { background: none; border: none; color: #4338ca; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; }
-        @media (max-width: 768px) { #ai-chat-box { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; border-radius: 0; } }
     </style>
 </head>
 <body>
@@ -194,7 +169,6 @@
                                 <button class="btn btn-outline-secondary" type="button" onclick="addNewSheetOption()" style="background: white; border-left: none; border-color: #cbd5e1; font-weight: bold; color: #475569;">＋ 加入</button>
                             </div>
                         </div>
-                        <!-- 🌟 位置選單：加入 onchange 觸發器 -->
                         <div class="col-md-6">
                             <label class="add-form-label">位置 <small style="color: #94a3b8; font-weight: normal;">跟隨分類</small></label>
                             <select id="addLocation" class="form-select add-form-input" onchange="handleCustomSelect(this, '請輸入新的位置名稱：')">
@@ -224,7 +198,6 @@
                                 <option value="">未填</option><option value="100%">100%</option><option value="90%">90%</option><option value="80%">80%</option><option value="70%">70%</option><option value="60%">60%</option><option value="50%">50%</option><option value="40%">40%</option><option value="30%">30%</option><option value="20%">20%</option><option value="10%">10%</option><option value="0%">0%</option>
                             </select>
                         </div>
-                        <!-- 🌟 編號選單：加入 onchange 觸發器 -->
                         <div class="col-md-6">
                             <label class="add-form-label">編號 <small style="color: #94a3b8; font-weight: normal;">跟隨分類</small></label>
                             <select id="addNum" class="form-select add-form-input" onchange="handleCustomSelect(this, '請輸入新的編號：')">
@@ -310,11 +283,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="ai-chat-widget">
-        <div id="ai-chat-box"><div id="ai-chat-header"><span><img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width:22px; height:22px; margin-right:6px; border-radius:50%; background:white; padding:2px; vertical-align:sub;">林伯樵助理</span><span id="ai-chat-close" onclick="toggleChat()">✖</span></div><div id="ai-chat-messages"><div class="chat-msg bot">你好！我是伯樵小管家 </div></div><div id="ai-chat-input-area"><input type="text" id="ai-chat-input" placeholder="問問 AI..." onkeypress="if(event.key==='Enter') sendChatMessage()"><button id="ai-chat-send" onclick="sendChatMessage()">➤</button></div></div>
-        <button id="ai-chat-btn" onclick="toggleChat()" title="開啟 AI 助理"><img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width:36px; height:36px; object-fit:contain;"></button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -507,7 +475,6 @@
             sheetSelect.value = newName; input.value = ''; handleAddSheetChange(); 
         }
 
-        // 🌟 新增：處理下拉選單選擇「自訂選項」的即時彈窗邏輯
         function handleCustomSelect(selectElem, promptMsg) {
             if (selectElem.value === 'ADD_NEW') {
                 let newVal = prompt(promptMsg);
@@ -527,7 +494,6 @@
             }
         }
 
-        // 🌟 更新：送出資料函數
         function submitNewChemical() {
             const name = document.getElementById('addName').value.trim(); const sheet = document.getElementById('addSheet').value;
             if(!name) return alert('「藥品名稱」為必填欄位！'); if(!sheet) return alert('「分類」為必填欄位！');
@@ -685,14 +651,6 @@
         function handleBuyerAction(selectElem, sheetName, uuid, colIndex, isMemo = false) { const val = selectElem.value; const originalVal = selectElem.getAttribute('data-original'); if (val === 'ADD_NEW' || val === 'DELETE_USER') { let actionStr = val === 'ADD_NEW' ? '新增' : '刪除'; let name = prompt(`請輸入要「${actionStr}」的人員名稱：`); if (name && name.trim() !== '') { const targetName = name.trim(); selectElem.disabled = true; if (val === 'ADD_NEW') { apiCall('addBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); if(isMemo) document.getElementById('memoAuthorSelect').value = targetName; selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } else { apiCall('removeBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; chemicalData.forEach(r => { if(String(r['請購人']) === targetName) r['請購人'] = ''; }); saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); alert(`已刪除人員「${targetName}」。`); selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } } else { selectElem.value = originalVal||''; } } else if(!isMemo) { selectElem.disabled = true; let targetRow = chemicalData.find(x => x['來源分頁']===sheetName && x['_UUID']===uuid); if(targetRow) { targetRow['請購人'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { selectElem.disabled = false; selectElem.setAttribute('data-original', val); updateBuyList(); }); } }
         function syncDateSelect(sheetName, uuid, colIndex, colName, prefix) { let mVal = document.querySelector(`.${prefix}-m-${uuid}`).value; let dVal = document.querySelector(`.${prefix}-d-${uuid}`).value; let val = (mVal && dVal) ? `${mVal.padStart(2, '0')}/${dVal.padStart(2, '0')}` : ""; if (!mVal && !dVal) val = ""; else if (!mVal || !dVal) return; let r = chemicalData.find(x => x['來源分頁'] === sheetName && x['_UUID'] === uuid); if(r) { r[colName] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { updateBuyList(); }); }
         function syncOrderCheck(checkboxElem, sheetName, uuid, colIndex) { const isChecked = checkboxElem.checked; checkboxElem.disabled = true; let targetRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_UUID'] === uuid); if (targetRow) { targetRow['需訂購'] = isChecked ? 'true' : 'false'; if (!isChecked) { targetRow['請購人'] = ''; targetRow['請購日'] = ''; targetRow['訂購日'] = ''; } saveToLocal(); } const colMap = { order: targetRow['_orderColIndex'], buyer: targetRow['_buyerColIndex'], reqDate: targetRow['_reqDateColIndex'], orderDate: targetRow['_orderDateColIndex'] }; apiCall('toggleNeedToOrder', {sheetName: sheetName, uuid: uuid, isChecked: isChecked, colMap: colMap}).then(success => { checkboxElem.disabled = false; if (success) { const term = document.getElementById('searchInput').value.toLowerCase().trim(); if (!term) displayData(chemicalData); else displayData(chemicalData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term)))); updateBuyList(); } }).catch(err => { checkboxElem.disabled = false; checkboxElem.checked = !isChecked; alert("連線失敗！"); }); }
-        function toggleChat() { const box = document.getElementById('ai-chat-box'); if (box.style.display === 'flex') box.style.display = 'none'; else { box.style.display = 'flex'; document.getElementById('ai-chat-input').focus(); } }
-        
-        function formatBotMessage(text) { 
-            return typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); 
-        }
-        
-        function sendChatMessage() { const input = document.getElementById('ai-chat-input'); const msg = input.value.trim(); if (!msg) return; appendMessage('user', msg); input.value = ''; input.disabled = true; const typingId = appendMessage('bot', '🐕 正在思考中...', true); apiCall('askGeminiAssistant', {userMessage: msg}).then(response => { document.getElementById(typingId).remove(); appendMessage('bot', formatBotMessage(response)); input.disabled = false; input.focus(); }).catch(err => { document.getElementById(typingId).remove(); appendMessage('bot', '⚠️ 抱歉，連線發生異常。'); input.disabled = false; input.focus(); }); }
-        function appendMessage(sender, text, isTyping = false) { const msgs = document.getElementById('ai-chat-messages'); const div = document.createElement('div'); div.className = `chat-msg ${sender}`; if (isTyping) div.id = 'typing-' + Date.now(); if (sender === 'user') div.innerText = text; else div.innerHTML = text; msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; return div.id; }
     </script>
 </body>
 </html>
