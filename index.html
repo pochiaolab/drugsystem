@@ -256,11 +256,11 @@
                         </div>
                         <div class="col-md-6">
                             <label>位置</label>
-                            <select id="editLocation" class="form-select" onchange="handleLocationChange(this)"></select>
+                            <select id="editLocation" class="form-select" onchange="handleCustomSelect(this, '請輸入新的位置名稱：')"></select>
                         </div>
                         <div class="col-md-4">
                             <label>編號</label>
-                            <input type="text" id="editNum" class="form-control">
+                            <select id="editNum" class="form-select" onchange="handleCustomSelect(this, '請輸入新的編號：')"></select>
                         </div>
                         <div class="col-md-4">
                             <label>使用狀態</label>
@@ -565,14 +565,51 @@
             for(let key in currentEditRow) {
                 if(key.toUpperCase().includes('CAS')) casVal = currentEditRow[key]; else if(key.includes('濃度')) concVal = currentEditRow[key]; else if(key.includes('規格')) specVal = currentEditRow[key]; else if(key.includes('廠商') || key.includes('廠牌')) venVal = currentEditRow[key]; else if(key.includes('位置')) locVal = currentEditRow[key]; else if(key.includes('編號')) numVal = currentEditRow[key];
             }
-            document.getElementById('editName').value = currentEditRow['藥品名稱'] || ''; document.getElementById('editSheet').value = currentEditRow['來源分頁'] || ''; document.getElementById('editCas').value = casVal; document.getElementById('editConc').value = concVal; document.getElementById('editSpec').value = specVal; document.getElementById('editNum').value = numVal;
-            const venSelect = document.getElementById('editVendor'); const locSelect = document.getElementById('editLocation');
-            let vVal = String(venVal).trim(); let lVal = String(locVal).trim();
+            document.getElementById('editName').value = currentEditRow['藥品名稱'] || ''; 
+            document.getElementById('editSheet').value = currentEditRow['來源分頁'] || ''; 
+            document.getElementById('editCas').value = casVal; 
+            document.getElementById('editConc').value = concVal; 
+            document.getElementById('editSpec').value = specVal; 
+            
+            const venSelect = document.getElementById('editVendor'); 
+            const locSelect = document.getElementById('editLocation');
+            const numSelect = document.getElementById('editNum');
+            
+            let vVal = String(venVal).trim(); 
+            let lVal = String(locVal).trim();
+            let nVal = String(numVal).trim();
+            
             venSelect.innerHTML = '<option value="">- 未標示 -</option>' + vendorList.map(v => `<option value="${v}">${v}</option>`).join('');
-            if(vVal && !vendorList.includes(vVal)) { let opt = document.createElement('option'); opt.value = vVal; opt.text = vVal; venSelect.add(opt, venSelect.options[1]); } venSelect.value = vVal;
-            let sheetLocs = locationsMap[sheetName] || []; locSelect.innerHTML = '<option value="">- 未標示 -</option>' + sheetLocs.map(l => `<option value="${l}">${l}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新位置...</option>`;
-            if(lVal && !sheetLocs.includes(lVal)) { let opt = document.createElement('option'); opt.value = lVal; opt.text = lVal; locSelect.add(opt, locSelect.options[1]); } locSelect.value = lVal;
-            document.getElementById('editStatus').value = formatStatus(currentEditRow['使用狀態']); let ghsVal = String(currentEditRow['GHS'] || '').toLowerCase(); document.getElementById('editGhs').value = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? 'true' : 'false';
+            if(vVal && !vendorList.includes(vVal)) { let opt = document.createElement('option'); opt.value = vVal; opt.text = vVal; venSelect.add(opt, venSelect.options[1]); } 
+            venSelect.value = vVal;
+            
+            let sheetLocs = locationsMap[sheetName] || []; 
+            locSelect.innerHTML = '<option value="">- 未標示 -</option>' + sheetLocs.map(l => `<option value="${l}">${l}</option>`).join('') + `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新位置...</option>`;
+            if(lVal && !sheetLocs.includes(lVal)) { let opt = document.createElement('option'); opt.value = lVal; opt.text = lVal; locSelect.add(opt, locSelect.options[1]); } 
+            locSelect.value = lVal;
+
+            let nums = chemicalData
+                .filter(r => r['來源分頁'] === sheetName && r['編號'])
+                .map(r => String(r['編號']).trim())
+                .filter(v => v !== '');
+            nums = [...new Set(nums)].sort((a, b) => { 
+                let numA = parseFloat(a); let numB = parseFloat(b); 
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB; 
+                return a.localeCompare(b); 
+            });
+            numSelect.innerHTML = '<option value="">- 未填寫 -</option>' + 
+                                  nums.map(n => `<option value="${n}">${n}</option>`).join('') + 
+                                  `<option disabled>──────</option><option value="ADD_NEW">➕ 自訂新編號...</option>`;
+            if(nVal && !nums.includes(nVal)) { 
+                let opt = document.createElement('option'); opt.value = nVal; opt.text = nVal; 
+                numSelect.add(opt, numSelect.options[1]); 
+            } 
+            numSelect.value = nVal;
+
+            document.getElementById('editStatus').value = formatStatus(currentEditRow['使用狀態']); 
+            let ghsVal = String(currentEditRow['GHS'] || '').toLowerCase(); 
+            document.getElementById('editGhs').value = (ghsVal === 'true' || ghsVal === '是' || ghsVal === '1') ? 'true' : 'false';
+            
             editModalInstance.show();
         }
 
@@ -651,12 +688,10 @@
         function handleBuyerAction(selectElem, sheetName, uuid, colIndex, isMemo = false) { const val = selectElem.value; const originalVal = selectElem.getAttribute('data-original'); if (val === 'ADD_NEW' || val === 'DELETE_USER') { let actionStr = val === 'ADD_NEW' ? '新增' : '刪除'; let name = prompt(`請輸入要「${actionStr}」的人員名稱：`); if (name && name.trim() !== '') { const targetName = name.trim(); selectElem.disabled = true; if (val === 'ADD_NEW') { apiCall('addBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); if(isMemo) document.getElementById('memoAuthorSelect').value = targetName; selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } else { apiCall('removeBuyer', {name: targetName}).then(updatedList => { buyerList = updatedList; chemicalData.forEach(r => { if(String(r['請購人']) === targetName) r['請購人'] = ''; }); saveToLocal(); renderDropdowns(); displayData(chemicalData); updateBuyList(); alert(`已刪除人員「${targetName}」。`); selectElem.disabled = false; }).catch(e => { selectElem.disabled = false; selectElem.value = originalVal||''; alert('操作失敗！'); }); } } else { selectElem.value = originalVal||''; } } else if(!isMemo) { selectElem.disabled = true; let targetRow = chemicalData.find(x => x['來源分頁']===sheetName && x['_UUID']===uuid); if(targetRow) { targetRow['請購人'] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { selectElem.disabled = false; selectElem.setAttribute('data-original', val); updateBuyList(); }); } }
         function syncDateSelect(sheetName, uuid, colIndex, colName, prefix) { let mVal = document.querySelector(`.${prefix}-m-${uuid}`).value; let dVal = document.querySelector(`.${prefix}-d-${uuid}`).value; let val = (mVal && dVal) ? `${mVal.padStart(2, '0')}/${dVal.padStart(2, '0')}` : ""; if (!mVal && !dVal) val = ""; else if (!mVal || !dVal) return; let r = chemicalData.find(x => x['來源分頁'] === sheetName && x['_UUID'] === uuid); if(r) { r[colName] = val; saveToLocal(); } apiCall('updateSheetStatus', {sheetName: sheetName, uuid: uuid, colIndex: colIndex, newValue: val}).then(() => { updateBuyList(); }); }
         
-        // 🌟 更新：需訂購按鈕的檢核與連動邏輯
         function syncOrderCheck(checkboxElem, sheetName, uuid, colIndex) { 
             let targetRow = chemicalData.find(r => r['來源分頁'] === sheetName && r['_UUID'] === uuid);
             const isChecked = checkboxElem.checked; 
 
-            // 1. 若要打勾，檢查是否填妥請購人與請購日
             if (isChecked && targetRow) {
                 let buyer = String(targetRow['請購人'] || '').trim();
                 let reqDate = String(targetRow['請購日'] || '').trim();
@@ -668,7 +703,6 @@
                 }
             }
 
-            // 2. 通過檢核，執行更新
             checkboxElem.disabled = true; 
             if (targetRow) { 
                 targetRow['需訂購'] = isChecked ? 'true' : 'false'; 
